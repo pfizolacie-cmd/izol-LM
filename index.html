@@ -1739,6 +1739,8 @@
     <div style="background:#fff; border-radius:12px; padding:10px; overflow:auto; margin-bottom:12px;">
       <svg id="sketchSvg" width="100%" height="420" viewBox="0 0 500 420"></svg>
     </div>
+    <div class="empty" style="padding:0 0 8px; text-align:left; color:var(--muted); font-size:11.5px;">👆 Klepni na ktorúkoľvek čiaru/bod pre detaily položky.</div>
+    <div class="prehlad-card" id="sketchDetail" style="display:none; margin:0 0 12px;"></div>
     <div class="sheet-actions">
       <button class="btn-cancel" id="sketchCloseBtn" style="flex:1;">Zavrieť</button>
     </div>
@@ -4909,8 +4911,8 @@ $('dodaciReviewConfirm').onclick = async ()=>{
 
 // ---------- NÁKRES TRASY (schematická izometria z už zameraných dát) ----------
 const ISO_DIRS = {
-  doprava: { dx: Math.cos(Math.PI/6), dy: -Math.sin(Math.PI/6) },
-  dolava: { dx: -Math.cos(Math.PI/6), dy: -Math.sin(Math.PI/6) },
+  doprava: { dx: 1, dy: 0 },
+  dolava: { dx: -1, dy: 0 },
   hore: { dx: 0, dy: -1 },
   dole: { dx: 0, dy: 1 },
 };
@@ -4931,16 +4933,31 @@ function buildSketchPoints(entriesList){
   let x=0, y=0, dir='doprava';
   const points = [{x,y,label:'', item:null}];
   const nodes = [];
-  entriesList.forEach(e=>{
+  entriesList.forEach((e, idx)=>{
     if(e.smer && ISO_DIRS[e.smer]) dir = e.smer;
     const v = ISO_DIRS[dir];
     const len = SEGMENT_LEN[e.item] || DEFAULT_MARKER_LEN;
     const nx = x + v.dx*len, ny = y + v.dy*len;
     points.push({x:nx, y:ny});
-    nodes.push({ x1:x, y1:y, x2:nx, y2:ny, item:e.item, label:segmentLabel(e), icon: ITEM_ICONS[e.item]||'' });
+    nodes.push({ x1:x, y1:y, x2:nx, y2:ny, item:e.item, label:segmentLabel(e), icon: ITEM_ICONS[e.item]||'', idx });
     x = nx; y = ny;
   });
   return { points, nodes };
+}
+
+function sketchEntryDetailText(e){
+  const parts = [];
+  const priemer = e.priemer || e.priemerA || '';
+  if(priemer) parts.push(`Ø${priemer}cm`);
+  if(e.priemerB) parts.push(`→ Ø${e.priemerB}cm`);
+  if(e.obvod) parts.push(`obvod ${e.obvod}cm`);
+  if(e.hrubka) parts.push(`vata ${e.hrubka}cm`);
+  if(e.dlzka) parts.push(`${e.dlzka}${e.dlzkaJednotka||'m'}`);
+  if(e.uhol) parts.push(`${e.uhol}°`);
+  if(e.smer) parts.push(`smer: ${({hore:'hore',dole:'dole',dolava:'doľava',doprava:'doprava'})[e.smer]||e.smer}`);
+  if(e.pocet && e.pocet !== '1') parts.push(`${e.pocet}ks`);
+  if(e.poznamka) parts.push(`"${e.poznamka}"`);
+  return parts.join(' · ');
 }
 
 function renderTrasaSketch(){
@@ -4969,17 +4986,31 @@ function renderTrasaSketch(){
   let svgContent = '';
   nodes.forEach(n=>{
     const x1=tx(n.x1), y1=ty(n.y1), x2=tx(n.x2), y2=ty(n.y2);
-    svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#C9601A" stroke-width="3" stroke-linecap="round"/>`;
+    svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="20" class="sketch-hit" data-idx="${n.idx}" style="cursor:pointer;"/>`;
+    svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#C9601A" stroke-width="3" stroke-linecap="round" pointer-events="none"/>`;
     const midX=(x1+x2)/2, midY=(y1+y2)/2;
     if(n.label){
-      svgContent += `<text x="${midX}" y="${midY-8}" text-anchor="middle" font-size="10.5" fill="#333" font-family="sans-serif">${escapeHtml(n.label)}</text>`;
+      svgContent += `<text x="${midX}" y="${midY-8}" text-anchor="middle" font-size="10.5" fill="#333" font-family="sans-serif" pointer-events="none">${escapeHtml(n.label)}</text>`;
     }
-    svgContent += `<circle cx="${x2}" cy="${y2}" r="4" fill="#C9601A"/>`;
+    svgContent += `<circle cx="${x2}" cy="${y2}" r="9" fill="transparent" class="sketch-hit" data-idx="${n.idx}" style="cursor:pointer;"/>`;
+    svgContent += `<circle cx="${x2}" cy="${y2}" r="4" fill="#C9601A" pointer-events="none"/>`;
   });
   // začiatočný bod
   svgContent += `<circle cx="${tx(0)}" cy="${ty(0)}" r="5" fill="#333"/><text x="${tx(0)-8}" y="${ty(0)+16}" font-size="10" fill="#666">štart</text>`;
 
   svg.innerHTML = svgContent;
+
+  const detailBox = $('sketchDetail');
+  detailBox.style.display = 'none';
+  svg.querySelectorAll('.sketch-hit').forEach(el=>{
+    el.onclick = ()=>{
+      const idx = parseInt(el.dataset.idx);
+      const e = entriesList[idx];
+      if(!e) return;
+      detailBox.style.display = 'block';
+      detailBox.innerHTML = `<b>${escapeHtml(e.item)}</b><br>${escapeHtml(sketchEntryDetailText(e))}`;
+    };
+  });
 }
 
 $('sketchViewBtn').onclick = ()=>{
