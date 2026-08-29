@@ -4355,7 +4355,13 @@ const MAT_TYPE_CATEGORY = {
 };
 const PLECH_TYPY = ['Hliníkový', 'Pozinkovaný', 'Nerezový'];
 
-function matKey(item){ return [item.typ, item.vyrobca||'', item.plechTyp||'', item.priemer||'', item.hrubka||''].join('|'); }
+// Normalizuje číselnú hodnotu na porovnanie (napr. "6" a "6.0" majú byť tá istá hrúbka).
+function normNum(v){
+  if(!v) return '';
+  const n = parseFloat(String(v).replace(',', '.'));
+  return isNaN(n) ? String(v).trim() : String(n);
+}
+function matKey(item){ return [item.typ, item.vyrobca||'', item.plechTyp||'', normNum(item.priemer), normNum(item.hrubka)].join('|'); }
 function matLabel(item){
   const parts = [MAT_TYPE_LABELS[item.typ] || item.typ];
   if(item.vyrobca) parts.push(item.vyrobca);
@@ -4560,6 +4566,8 @@ async function openAsistentTab(){
   if(!workersLoaded) await loadWorkers();
   await loadShifts();
   if(projects.length === 0) await loadProjects();
+  if(!skladLoaded) await loadSkladData();
+  await loadCars();
 }
 
 // ---------- Nástroje (tools), ktoré AI vie volať ----------
@@ -4590,6 +4598,62 @@ const AI_TOOLS = [
     input_schema: { type:"object", properties: {
       zakazka: {type:"string"}, datum: {type:"string", description:"YYYY-MM-DD"}, text: {type:"string"}
     }, required:["zakazka","datum","text"] }
+  },
+  {
+    name: "zisti_stav_skladu",
+    description: "Zistí aktuálny stav materiálu na centrálnom sklade firmy (koľko je čoho k dispozícii - Armaflex, K-Flex, minerálna vlna, plech, pásky, lepidlo...). Ak sa priemer/hrúbka nezadá, vráti všetky rozmery daného typu.",
+    input_schema: { type:"object", properties: {
+      typ: {type:"string", enum: Object.keys(MAT_TYPE_LABELS), description:"Typ materiálu - vyber najbližšiu zhodu podľa toho, čo používateľ povedal"},
+      priemer: {type:"string", description:"Priemer v cm, ak bol spomenutý"},
+      hrubka: {type:"string", description:"Hrúbka vaty v cm, ak bola spomenutá"}
+    }, required:["typ"] }
+  },
+  {
+    name: "navrhni_naskladnenie",
+    description: "Pripraví NÁVRH na naskladnenie materiálu do centrálneho skladu firmy. NEVYKONÁ zmenu samo - len ju pripraví, používateľ musí potvrdiť.",
+    input_schema: { type:"object", properties: {
+      typ: {type:"string", enum: Object.keys(MAT_TYPE_LABELS)},
+      vyrobca: {type:"string", description:"Výrobca vlny ak relevantné (Isover/Paroc/Rockwool/Marmus)"},
+      plechTyp: {type:"string", description:"Typ plechu ak relevantné (Hliníkový/Pozinkovaný/Nerezový)"},
+      priemer: {type:"string"}, hrubka: {type:"string"},
+      mnozstvo: {type:"string"}, jednotka: {type:"string", enum:["m","m2","ks","kg"]}
+    }, required:["typ","mnozstvo","jednotka"] }
+  },
+  {
+    name: "navrhni_odber_skladu",
+    description: "Pripraví NÁVRH na odobratie materiálu zo skladu na konkrétnu zákazku. NEVYKONÁ zmenu samo - len ju pripraví, používateľ musí potvrdiť.",
+    input_schema: { type:"object", properties: {
+      typ: {type:"string", enum: Object.keys(MAT_TYPE_LABELS)},
+      vyrobca: {type:"string"}, plechTyp: {type:"string"},
+      priemer: {type:"string"}, hrubka: {type:"string"},
+      mnozstvo: {type:"string"}, jednotka: {type:"string", enum:["m","m2","ks","kg"]},
+      zakazka: {type:"string", description:"Na akú zákazku sa odoberá, ak bolo spomenuté"}
+    }, required:["typ","mnozstvo","jednotka"] }
+  },
+  {
+    name: "zisti_stav_zakazky_zamerania",
+    description: "Zistí, v akom stave je zákazka v module Zameranie - koľko má trás a koľko položiek je zameraných (hrubý ukazovateľ rozpracovanosti).",
+    input_schema: { type:"object", properties: { nazov_zakazky: {type:"string"} }, required:["nazov_zakazky"] }
+  },
+  {
+    name: "navrhni_novu_zakazku",
+    description: "Pripraví NÁVRH na založenie novej zákazky/projektu v module Zameranie. NEVYKONÁ to samo - čaká na potvrdenie.",
+    input_schema: { type:"object", properties: { nazov: {type:"string"} }, required:["nazov"] }
+  },
+  {
+    name: "zisti_bozp_stav",
+    description: "Zistí stav BOZP školenia - buď pre konkrétneho zamestnanca (ak je meno zadané), alebo súhrn za celý tím (kto potrebuje pozornosť).",
+    input_schema: { type:"object", properties: { meno: {type:"string", description:"Meno zamestnanca, nechaj prázdne pre súhrn celého tímu"} } }
+  },
+  {
+    name: "zisti_telefon",
+    description: "Zistí telefónne číslo konkrétneho zamestnanca podľa mena.",
+    input_schema: { type:"object", properties: { meno: {type:"string"} }, required:["meno"] }
+  },
+  {
+    name: "zisti_stav_auta",
+    description: "Zistí stav STK a poistky konkrétneho auta podľa ŠPZ alebo popisu (napr. 'Vivaro', 'modrá dodávka').",
+    input_schema: { type:"object", properties: { identifikator: {type:"string"} }, required:["identifikator"] }
   },
 ];
 
@@ -4628,11 +4692,92 @@ function toolNavrhniPoznamku(input){
   return { pripravene: true, sprava:'Návrh na poznámku je pripravený, čaká na potvrdenie od používateľa.' };
 }
 
-function executeAiTool(name, input){
+function toolZistiStavSkladu(input){
+  const { allKeys, sampleByKey, sums } = aggregateMaterialLedger([
+    { name:'prijate', items: skladPrijem },
+    { name:'vydane', items: skladVydaj },
+  ]);
+  const matching = allKeys.filter(k=>{
+    const s = sampleByKey[k];
+    if(s.typ !== input.typ) return false;
+    if(input.priemer && s.priemer !== input.priemer) return false;
+    if(input.hrubka && s.hrubka !== input.hrubka) return false;
+    return true;
+  });
+  if(matching.length === 0) return { najdene:false, sprava:'Tento materiál sa na sklade nenašiel (možno tam ešte nikdy nebol naskladnený).' };
+  const polozky = matching.map(k=>{
+    const s = sampleByKey[k]; const dat = sums[k];
+    return { popis: matLabel(s), zostatok: round1((dat.prijate||0)-(dat.vydane||0)), jednotka: s.jednotka };
+  });
+  return { najdene:true, polozky };
+}
+function toolNavrhniNaskladnenie(input){
+  pendingAsistentAction = { type:'naskladnenie', ...input };
+  return { pripravene:true, sprava:'Návrh na naskladnenie je pripravený, čaká na potvrdenie od používateľa.' };
+}
+function toolNavrhniOdberSkladu(input){
+  pendingAsistentAction = { type:'odber_sklad', ...input };
+  return { pripravene:true, sprava:'Návrh na odber zo skladu je pripravený, čaká na potvrdenie od používateľa.' };
+}
+
+async function toolZistiStavZakazkyZamerania(input){
+  const q = (input.nazov_zakazky||'').toLowerCase();
+  if(projects.length === 0) await loadProjects();
+  const matched = projects.filter(p=> p.name.toLowerCase().includes(q));
+  if(matched.length === 0) return { najdene:false, sprava:'Zákazka s týmto názvom sa v Zameraní nenašla.' };
+  const zakazky = [];
+  for(const p of matched){
+    let trasy = [];
+    try{ const r = await window.storage.get('trasy:'+p.id, true); trasy = r ? JSON.parse(r.value) : []; }catch(e){}
+    let totalEntries = 0;
+    for(const t of trasy){
+      try{ const er = await window.storage.get('entries:'+p.id+':'+t.id, true); totalEntries += er ? JSON.parse(er.value).length : 0; }catch(e){}
+    }
+    zakazky.push({ nazov: p.name, pocet_tras: trasy.length, pocet_zameranych_polozok: totalEntries });
+  }
+  return { najdene:true, zakazky };
+}
+function toolNavrhniNovuZakazku(input){
+  pendingAsistentAction = { type:'nova_zakazka', nazov: input.nazov };
+  return { pripravene:true, sprava:'Návrh na založenie novej zákazky je pripravený, čaká na potvrdenie.' };
+}
+function toolZistiBozpStav(input){
+  if(input.meno){
+    const w = workers.find(x=>x.name.toLowerCase().includes(input.meno.toLowerCase()));
+    if(!w) return { najdene:false, sprava:'Zamestnanec s týmto menom sa nenašiel.' };
+    const platnostDo = (w.bozp||{}).platnostDo;
+    if(!platnostDo) return { najdene:true, meno:w.name, stav:'BOZP nemá zaznamenané' };
+    const dni = daysUntil(platnostDo);
+    return { najdene:true, meno:w.name, platnostDo, dni_do_konca:dni, expirovalo: dni<0 };
+  }
+  const potrebujuPozornost = workers.filter(w=>{ const p=(w.bozp||{}).platnostDo; return !p || daysUntil(p) < 30; }).map(w=>w.name);
+  return { pocet_celkovo: workers.length, potrebuju_pozornost: potrebujuPozornost };
+}
+function toolZistiTelefon(input){
+  const w = workers.find(x=>x.name.toLowerCase().includes((input.meno||'').toLowerCase()));
+  if(!w) return { najdene:false, sprava:'Zamestnanec s týmto menom sa nenašiel.' };
+  return { najdene:true, meno:w.name, telefon: w.telefon || 'nemá zaznamenané telefónne číslo' };
+}
+function toolZistiStavAuta(input){
+  const q = (input.identifikator||'').toLowerCase();
+  const c = cars.find(x=> (x.spz||'').toLowerCase().includes(q) || (x.popis||'').toLowerCase().includes(q));
+  if(!c) return { najdene:false, sprava:'Auto s týmto identifikátorom sa nenašlo.' };
+  return { najdene:true, spz:c.spz, popis:c.popis, stk:c.stk||'nezaznamenané', poistka:c.poistka||'nezaznamenané', ma_teraz: c.who||'nikto' };
+}
+
+async function executeAiTool(name, input){
   if(name === 'ziskaj_suhrn_zakazky') return toolZiskajSuhrnZakazky(input);
   if(name === 'zoznam_najblizsich_zakaziek') return toolZoznamNajblizsichZakaziek(input);
   if(name === 'navrhni_presun_zamestnanca') return toolNavrhniPresun(input);
   if(name === 'navrhni_poznamku') return toolNavrhniPoznamku(input);
+  if(name === 'zisti_stav_skladu') return toolZistiStavSkladu(input);
+  if(name === 'navrhni_naskladnenie') return toolNavrhniNaskladnenie(input);
+  if(name === 'navrhni_odber_skladu') return toolNavrhniOdberSkladu(input);
+  if(name === 'zisti_stav_zakazky_zamerania') return await toolZistiStavZakazkyZamerania(input);
+  if(name === 'navrhni_novu_zakazku') return toolNavrhniNovuZakazku(input);
+  if(name === 'zisti_bozp_stav') return toolZistiBozpStav(input);
+  if(name === 'zisti_telefon') return toolZistiTelefon(input);
+  if(name === 'zisti_stav_auta') return toolZistiStavAuta(input);
   return { chyba: 'Neznámy nástroj' };
 }
 
@@ -4642,7 +4787,19 @@ async function runAgentTurn(userText){
   pendingAsistentAction = null;
   $('asistentConfirmRow').style.display = 'none';
 
-  const systemPrompt = `Si hlasový asistent majiteľa izolatérskej/klampiarskej firmy Izol L&M. Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown formátovania, bez odrážok - piš plynulým textom). Na otázky o zákazkách/rozpise použi nástroje na zistenie skutočných dát, nikdy si nič nevymýšľaj. Ak používateľ žiada zmenu (presun človeka, pridanie poznámky), použi príslušný "navrhni_*" nástroj - ten zmenu len pripraví, nikdy ju sám nevykonávaš. Po zavolaní "navrhni_*" nástroja vysvetli v odpovedi jasne a stručne, čo presne sa navrhuje, aby to používateľ mohol potvrdiť.`;
+  const systemPrompt = `Si hlasový AI asistent majiteľa firmy Izol L&M s.r.o. (Bojnice, Slovensko) - máš dve úlohy naraz.
+
+1) SI SENIOR ODBORNÍK na tepelné, chladové a protipožiarne izolácie a klampiarske práce v priemysle a administratívnych budovách (výrobné haly, sklady, kotolne, parovody, nádrže, VZT potrubia, kancelárske/administratívne budovy). Ovládaš:
+- Kaučukové izolácie (Armaflex AC do 105°C, Armaflex HT do 150°C aj UV odolné na vonkajšie použitie; K-Flex ako porovnateľná alternatíva) - rúrkové puzdrá na menšie priemery, dosky/pásy na väčšie priemery a nádrže.
+- Minerálnu vlnu (Isover, Paroc, Rockwool, Marmus) - lamelové rohože s hliníkovou fóliou na väčšie priemery a VZT, použitie do 250-300°C, vata s pletivom (wired mat) na vysokoteplotné aplikácie ako parovody.
+- Minimálne hrúbky izolácie podľa Vyhlášky MH SR 14/2016 (do 22mm→20mm, 22-35mm→30mm, 35-100mm=priemer rúry, nad 100mm→100mm) a normy STN EN ISO 12241.
+- Klampiarske práce - oplechovanie hliníkovým/pozinkovaným/nerezovým plechom, výpočet rozvinutej šírky plechu (obvod = π × (priemer rúry + 2× hrúbka izolácie) + prekrytie na falcovanie/spoj), STN 73 3610.
+- Vieš poradiť, aký materiál/hrúbku odporučiť pre danú situáciu (napr. parovod potrebuje vysokoteplotnú izoláciu s pletivom, chladové rozvody potrebujú parozábranu proti kondenzácii, vonkajšie potrubie potrebuje UV odolný alebo oplechovaný povrch).
+Keď sa ťa niekto spýta na odbornú otázku (aký materiál použiť, akú hrúbku, ako sa počíta rozvinutá šírka...), odpovedz ako skúsený odborník z odboru - vecne, prakticky, so skutočnými technickými detailmi, nie všeobecne.
+
+2) SI ZÁROVEŇ HLASOVÝ OVLÁDAČ tejto konkrétnej appky - vieš čítať skutočné dáta firmy (rozpis, sklad materiálu, stav zákaziek v Zameraní, BOZP zamestnancov, telefónne čísla, stav áut) cez nástroje, a vieš pripraviť zmeny (presun človeka, poznámka, naskladnenie/odber materiálu zo skladu, založenie novej zákazky), ktoré ale VŽDY najprv čakajú na potvrdenie používateľa - nikdy nevykonávaš zmenu sám.
+
+Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown formátovania, bez odrážok - piš plynulým textom). Na otázky o zákazkách/rozpise/sklade použi nástroje na zistenie skutočných dát, nikdy si ich nevymýšľaj. Ak používateľ žiada zmenu dát appky, použi príslušný "navrhni_*" nástroj - ten zmenu len pripraví, nikdy ju sám nevykonávaš. Po zavolaní "navrhni_*" nástroja vysvetli v odpovedi jasne a stručne, čo presne sa navrhuje, aby to používateľ mohol potvrdiť. Odborné otázky (materiál, hrúbka, normy) nepotrebujú žiadny nástroj - odpovedz na ne rovno zo svojich znalostí.`;
 
   let messages = [{ role:"user", content: userText }];
   let finalText = '';
@@ -4679,10 +4836,10 @@ async function runAgentTurn(userText){
 
     // Claude chce zavolať nástroj/e - vykonaj ich lokálne a pošli výsledky späť
     messages.push({ role:"assistant", content: data.content });
-    const toolResults = toolUseBlocks.map(tb=>{
-      const result = executeAiTool(tb.name, tb.input || {});
+    const toolResults = await Promise.all(toolUseBlocks.map(async tb=>{
+      const result = await executeAiTool(tb.name, tb.input || {});
       return { type:"tool_result", tool_use_id: tb.id, content: JSON.stringify(result) };
-    });
+    }));
     messages.push({ role:"user", content: toolResults });
   }
 
@@ -4782,6 +4939,30 @@ $('asistentConfirmBtn').onclick = async ()=>{
     matches.forEach(s=>{ s.poznamka = (s.poznamka ? s.poznamka+' | ' : '') + action.text; });
     await saveShifts();
     showToast(`Poznámka pridaná pre ${matches.length} ľudí`);
+  } else if(action.type === 'naskladnenie'){
+    if(!skladLoaded) await loadSkladData();
+    skladPrijem.push({
+      id:'sp-'+Date.now(), typ:action.typ, vyrobca:action.vyrobca||'', plechTyp:action.plechTyp||'',
+      priemer:action.priemer||'', hrubka:action.hrubka||'', mnozstvo:action.mnozstvo, jednotka:action.jednotka,
+      poznamka:'Cez AI Asistenta', ts:Date.now(),
+    });
+    await saveSkladList('prijem');
+    showToast('Naskladnené do skladu firmy');
+  } else if(action.type === 'odber_sklad'){
+    if(!skladLoaded) await loadSkladData();
+    skladVydaj.push({
+      id:'sv-'+Date.now(), typ:action.typ, vyrobca:action.vyrobca||'', plechTyp:action.plechTyp||'',
+      priemer:action.priemer||'', hrubka:action.hrubka||'', mnozstvo:action.mnozstvo, jednotka:action.jednotka,
+      zakazka:action.zakazka||'', poznamka:'Cez AI Asistenta', ts:Date.now(),
+    });
+    await saveSkladList('vydaj');
+    showToast('Odobraté zo skladu');
+  } else if(action.type === 'nova_zakazka'){
+    if(projects.length === 0) await loadProjects();
+    const newId = 'proj-'+Date.now();
+    projects.push({ id:newId, name: action.nazov });
+    await saveProjects();
+    showToast(`Zákazka "${action.nazov}" založená v Zameraní`);
   }
 
   pendingAsistentAction = null;
