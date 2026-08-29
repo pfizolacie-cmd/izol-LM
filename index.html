@@ -672,6 +672,41 @@
     </div>
   </div>
 
+  <!-- ---- TAB: AI ASISTENT ---- -->
+  <div class="tab" id="tab-asistent">
+    <div id="asistentLocked" class="locked" style="display:none;">
+      <div class="ico">🔒</div>
+      AI Asistent je dostupný len pre majiteľa.
+    </div>
+    <div id="asistentContent" style="display:none;">
+      <div class="section-label">🎙️ AI Asistent</div>
+      <div class="empty" style="padding:0 16px 12px; text-align:left; color:var(--muted); font-size:12.5px;">
+        Stlač mikrofón a spýtaj sa (napr. "aký je stav zákazky Bratislava" alebo "presuň Jána Nováka na Brno zajtra").
+      </div>
+
+      <div style="text-align:center; padding:20px 16px;">
+        <button id="asistentMicBtn" style="width:90px; height:90px; border-radius:50%; background:var(--safety); border:none; font-size:36px; box-shadow:0 4px 14px rgba(0,0,0,.25);">🎙️</button>
+        <div id="asistentStatus" style="margin-top:10px; color:var(--muted); font-size:13px;">Klepni a hovor</div>
+      </div>
+
+      <div class="prehlad-card" id="asistentTranscript" style="display:none;"></div>
+      <div class="prehlad-card" id="asistentResponse" style="display:none;"></div>
+
+      <div class="sheet-actions" id="asistentConfirmRow" style="display:none; margin:0 16px 16px;">
+        <button class="btn-cancel" id="asistentCancelBtn" style="flex:1; background:#fbe4e4; border-color:#e0a8a8; color:#a33;">❌ Zrušiť</button>
+        <button class="btn-save" id="asistentConfirmBtn" style="flex:1;">✅ Potvrdiť</button>
+      </div>
+
+      <div class="field" style="margin:0 16px 16px;">
+        <label>Alebo napíš text namiesto hlasu</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="asistentTextInput" placeholder="napíš otázku/príkaz..." style="flex:1;">
+          <button class="new-car-btn" id="asistentTextSend" style="width:auto; padding:10px 16px;">Poslať</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ---- TAB: KALENDÁR ---- -->
   <div class="tab active" id="tab-kalendar">
     <div class="cal-toolbar">
@@ -2058,6 +2093,7 @@ $('logoutBtn').onclick = async ()=>{
 // ---------- NAVIGÁCIA: plocha s dlaždicami + quick bar (namiesto starej spodnej lišty) ----------
 const HOME_TILES = [
   {tab:'firma', ic:'🏢', label:'Prehľad firmy', ownerOnly:true},
+  {tab:'asistent', ic:'🎙️', label:'AI Asistent', ownerOnly:true},
   {tab:'kalendar', ic:'📅', label:'Kalendár', permKeys:null},
   {tab:'rozpis', ic:'📋', label:'Rozpis', permKeys:null},
   {tab:'zameranie', ic:'📐', label:'Zameranie', permKeys:['zameranie']},
@@ -2097,6 +2133,7 @@ function openTab(tabName){
   if(tabName === 'material') openMaterialTab();
   if(tabName === 'sklad') openSkladTab();
   if(tabName === 'firma') openFirmaTab();
+  if(tabName === 'asistent') openAsistentTab();
 }
 
 function goHome(){
@@ -4510,6 +4547,247 @@ function renderFirmaKpis(){
   const vydajovTentoMesiac = skladVydaj.filter(i=> (i.ts||0) >= monthStart.getTime()).length;
   addKpi(wrap, vydajovTentoMesiac, 'Výdajov zo skladu tento mesiac');
 }
+
+// ================= AI ASISTENT (hlasový, s tool-use a potvrdením pred zmenou dát) =================
+async function openAsistentTab(){
+  if(me.role !== 'Majiteľ'){
+    $('asistentLocked').style.display = 'block';
+    $('asistentContent').style.display = 'none';
+    return;
+  }
+  $('asistentLocked').style.display = 'none';
+  $('asistentContent').style.display = 'block';
+  if(!workersLoaded) await loadWorkers();
+  await loadShifts();
+  if(projects.length === 0) await loadProjects();
+}
+
+// ---------- Nástroje (tools), ktoré AI vie volať ----------
+const AI_TOOLS = [
+  {
+    name: "ziskaj_suhrn_zakazky",
+    description: "Získa súhrn o zákazke podľa rozpisu - ktorí ľudia tam pracujú a kedy, prípadne poznámky. Hľadá podľa čiastočnej zhody názvu.",
+    input_schema: { type:"object", properties: { nazov_zakazky: {type:"string", description:"Názov alebo časť názvu zákazky/mesta"} }, required:["nazov_zakazky"] }
+  },
+  {
+    name: "zoznam_najblizsich_zakaziek",
+    description: "Vráti zoznam zákaziek naplánovaných v najbližších dňoch podľa rozpisu/kalendára, zoskupené podľa dátumu.",
+    input_schema: { type:"object", properties: { pocet_dni: {type:"number", description:"Koľko dní dopredu (predvolene 7)"} } }
+  },
+  {
+    name: "navrhni_presun_zamestnanca",
+    description: "Pripraví NÁVRH na presun zamestnanca na inú zákazku k určitému dátumu. NEVYKONÁ zmenu samo - len ju pripraví, používateľ musí potvrdiť.",
+    input_schema: { type:"object", properties: {
+      meno: {type:"string", description:"Presné meno zamestnanca"},
+      nova_zakazka: {type:"string", description:"Názov zákazky, kam sa presúva"},
+      datum: {type:"string", description:"Dátum v tvare YYYY-MM-DD"},
+      dovod: {type:"string", description:"Dôvod presunu, ak bol uvedený"}
+    }, required:["meno","nova_zakazka","datum"] }
+  },
+  {
+    name: "navrhni_poznamku",
+    description: "Pripraví NÁVRH na pridanie poznámky ku všetkým ľuďom na danej zákazke v daný deň. NEVYKONÁ zmenu samo - len ju pripraví, používateľ musí potvrdiť.",
+    input_schema: { type:"object", properties: {
+      zakazka: {type:"string"}, datum: {type:"string", description:"YYYY-MM-DD"}, text: {type:"string"}
+    }, required:["zakazka","datum","text"] }
+  },
+];
+
+let pendingAsistentAction = null;
+
+function toolZiskajSuhrnZakazky(input){
+  const q = (input.nazov_zakazky||'').toLowerCase();
+  const matches = shifts.filter(s=> s.zakazka && s.zakazka.toLowerCase().includes(q));
+  if(matches.length === 0) return { najdene: false, sprava: 'Žiadna zákazka s týmto názvom sa v rozpise nenašla.' };
+  const byDate = {};
+  matches.forEach(s=>{ if(!byDate[s.date]) byDate[s.date]=[]; byDate[s.date].push({worker:s.worker, poznamka:s.poznamka||''}); });
+  return { najdene: true, dni: byDate };
+}
+
+function toolZoznamNajblizsichZakaziek(input){
+  const days = input.pocet_dni || 7;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const limit = new Date(today); limit.setDate(limit.getDate()+days);
+  const relevant = shifts.filter(s=>{
+    const d = new Date(s.date+'T00:00:00');
+    return d >= today && d <= limit && s.zakazka;
+  });
+  const byDate = {};
+  relevant.forEach(s=>{ if(!byDate[s.date]) byDate[s.date]=new Set(); byDate[s.date].add(s.zakazka); });
+  const result = {};
+  Object.keys(byDate).sort().forEach(d=>{ result[d] = [...byDate[d]]; });
+  return result;
+}
+
+function toolNavrhniPresun(input){
+  pendingAsistentAction = { type:'presun', ...input };
+  return { pripravene: true, sprava:'Návrh na presun je pripravený, čaká na potvrdenie od používateľa.' };
+}
+function toolNavrhniPoznamku(input){
+  pendingAsistentAction = { type:'poznamka', ...input };
+  return { pripravene: true, sprava:'Návrh na poznámku je pripravený, čaká na potvrdenie od používateľa.' };
+}
+
+function executeAiTool(name, input){
+  if(name === 'ziskaj_suhrn_zakazky') return toolZiskajSuhrnZakazky(input);
+  if(name === 'zoznam_najblizsich_zakaziek') return toolZoznamNajblizsichZakaziek(input);
+  if(name === 'navrhni_presun_zamestnanca') return toolNavrhniPresun(input);
+  if(name === 'navrhni_poznamku') return toolNavrhniPoznamku(input);
+  return { chyba: 'Neznámy nástroj' };
+}
+
+// ---------- Hlavný cyklus - pošle správu Claude, vybaví prípadné tool-use kolo, vráti finálny text ----------
+async function runAgentTurn(userText){
+  $('asistentStatus').textContent = 'Premýšľam…';
+  pendingAsistentAction = null;
+  $('asistentConfirmRow').style.display = 'none';
+
+  const systemPrompt = `Si hlasový asistent majiteľa izolatérskej/klampiarskej firmy Izol L&M. Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown formátovania, bez odrážok - piš plynulým textom). Na otázky o zákazkách/rozpise použi nástroje na zistenie skutočných dát, nikdy si nič nevymýšľaj. Ak používateľ žiada zmenu (presun človeka, pridanie poznámky), použi príslušný "navrhni_*" nástroj - ten zmenu len pripraví, nikdy ju sám nevykonávaš. Po zavolaní "navrhni_*" nástroja vysvetli v odpovedi jasne a stručne, čo presne sa navrhuje, aby to používateľ mohol potvrdiť.`;
+
+  let messages = [{ role:"user", content: userText }];
+  let finalText = '';
+  let safetyCounter = 0;
+
+  while(safetyCounter < 6){
+    safetyCounter++;
+    let data;
+    try{
+      const response = await fetch(CLAUDE_PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1024,
+          system: systemPrompt,
+          tools: AI_TOOLS,
+          messages
+        })
+      });
+      data = await response.json();
+    }catch(err){
+      finalText = 'Prepáč, nepodarilo sa mi spojiť s AI. Skús to prosím znova.';
+      break;
+    }
+
+    const toolUseBlocks = (data.content||[]).filter(b=>b.type==='tool_use');
+    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ');
+
+    if(toolUseBlocks.length === 0){
+      finalText = textBlocks || 'Nerozumel som, skús to prosím inak.';
+      break;
+    }
+
+    // Claude chce zavolať nástroj/e - vykonaj ich lokálne a pošli výsledky späť
+    messages.push({ role:"assistant", content: data.content });
+    const toolResults = toolUseBlocks.map(tb=>{
+      const result = executeAiTool(tb.name, tb.input || {});
+      return { type:"tool_result", tool_use_id: tb.id, content: JSON.stringify(result) };
+    });
+    messages.push({ role:"user", content: toolResults });
+  }
+
+  $('asistentStatus').textContent = 'Klepni a hovor';
+  $('asistentResponse').style.display = 'block';
+  $('asistentResponse').textContent = finalText;
+  speakText(finalText);
+
+  if(pendingAsistentAction){
+    $('asistentConfirmRow').style.display = 'flex';
+  }
+}
+
+function speakText(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'sk-SK';
+    window.speechSynthesis.speak(utter);
+  }catch(e){}
+}
+
+// ---------- Rozpoznávanie reči (mikrofón) ----------
+let asistentRecognition = null;
+let asistentListening = false;
+
+function getSpeechRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = 'sk-SK';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+$('asistentMicBtn').onclick = ()=>{
+  if(asistentListening){
+    if(asistentRecognition) asistentRecognition.stop();
+    return;
+  }
+  asistentRecognition = getSpeechRecognition();
+  if(!asistentRecognition){
+    showToast('Rozpoznávanie reči nie je v tomto prehliadači podporované - skús text nižšie.');
+    return;
+  }
+  asistentListening = true;
+  $('asistentStatus').textContent = '🔴 Počúvam…';
+  $('asistentMicBtn').style.background = '#c0392b';
+
+  asistentRecognition.onresult = (event)=>{
+    const transcript = event.results[0][0].transcript;
+    $('asistentTranscript').style.display = 'block';
+    $('asistentTranscript').innerHTML = `<b>Ty:</b> ${escapeHtml(transcript)}`;
+    runAgentTurn(transcript);
+  };
+  asistentRecognition.onerror = ()=>{
+    showToast('Nepodarilo sa rozpoznať reč, skús to znova alebo napíš text.');
+  };
+  asistentRecognition.onend = ()=>{
+    asistentListening = false;
+    $('asistentMicBtn').style.background = 'var(--safety)';
+    if($('asistentStatus').textContent === '🔴 Počúvam…') $('asistentStatus').textContent = 'Klepni a hovor';
+  };
+  asistentRecognition.start();
+};
+
+$('asistentTextSend').onclick = ()=>{
+  const text = $('asistentTextInput').value.trim();
+  if(!text) return;
+  $('asistentTranscript').style.display = 'block';
+  $('asistentTranscript').innerHTML = `<b>Ty:</b> ${escapeHtml(text)}`;
+  $('asistentTextInput').value = '';
+  runAgentTurn(text);
+};
+
+$('asistentCancelBtn').onclick = ()=>{
+  pendingAsistentAction = null;
+  $('asistentConfirmRow').style.display = 'none';
+  showToast('Zrušené');
+};
+
+$('asistentConfirmBtn').onclick = async ()=>{
+  if(!pendingAsistentAction) return;
+  const action = pendingAsistentAction;
+
+  if(action.type === 'presun'){
+    const existing = findEntry(action.datum, action.meno);
+    const poznamkaExtra = action.dovod ? ` (presun: ${action.dovod})` : '';
+    if(existing){ existing.zakazka = action.nova_zakazka; existing.poznamka = (existing.poznamka||'') + poznamkaExtra; }
+    else{ shifts.push({ id:'s-'+Date.now(), date:action.datum, worker:action.meno, zakazka:action.nova_zakazka, from:'', to:'', poznamka: poznamkaExtra.trim() }); }
+    await saveShifts();
+    showToast(`${action.meno} presunutý na ${action.nova_zakazka}`);
+  } else if(action.type === 'poznamka'){
+    const matches = shifts.filter(s=> s.zakazka && s.zakazka.toLowerCase()===action.zakazka.toLowerCase() && s.date===action.datum);
+    matches.forEach(s=>{ s.poznamka = (s.poznamka ? s.poznamka+' | ' : '') + action.text; });
+    await saveShifts();
+    showToast(`Poznámka pridaná pre ${matches.length} ľudí`);
+  }
+
+  pendingAsistentAction = null;
+  $('asistentConfirmRow').style.display = 'none';
+  renderCalendar(); renderRozpis();
+};
 
 // Spoločná logika pre "skladové" prehľady (Materiál aj Sklad) - zoskupí položky podľa matKey()
 // a spočíta množstvo pre každú zadanú kategóriu (napr. dodané/odobraté/spotrebované).
