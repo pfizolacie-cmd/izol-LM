@@ -612,7 +612,7 @@ function switchTab(tabName){
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script>
+<script async>
   // AI funkcie (Rýchly zápis, Dodací list, Nákres trasy, Import rozpisu) volajú Claude cez
   // tento bezpečný "prostredník" (Cloudflare Worker), ktorý potichu pridáva API kľúč -
   // appka samotná ho nikdy neuvidí ani neobsahuje.
@@ -6319,6 +6319,14 @@ $('clearTestDataBtn').onclick = async ()=>{
 };
 
 (async function boot(){
+  // ČAKAJ NA FIREBASE
+  for(let i=0; i<100; i++){
+    if(typeof firebase !== 'undefined' && window.fbAuth){
+      break;
+    }
+    await new Promise(r => setTimeout(r, 100));
+  }
+  
   // Čaká na to, čo Firebase Auth vie o prihlásení (session sa udrží aj po obnovení stránky).
   window.fbAuth.onAuthChange(async (user)=>{
     if(user){
