@@ -472,12 +472,12 @@
 
   input, select, textarea{
     border-radius:11px !important; border:1px solid var(--line) !important; background:rgba(255,255,255,.05) !important;
-    color:#fff !important; font-family:-apple-system,BlinkMacSystemFont,sans-serif !important;
+    color:#e8e2da !important; font-family:-apple-system,BlinkMacSystemFont,sans-serif !important;
   }
   input::placeholder, textarea::placeholder{ color:#847b70; }
   label{ color:#b8afa4 !important; }
   .trasa-select, .cal-toolbar select, #calWorkerSelect{
-    background:rgba(255,255,255,.05) !important; border:1px solid var(--line) !important; color:#fff !important;
+    background:rgba(255,255,255,.05) !important; border:1px solid var(--line) !important; color:#e8e2da !important;
   }
 
   .sheet{
@@ -1018,17 +1018,18 @@
       Materiál je dostupný len pre majiteľa/majstra.
     </div>
     <div id="materialContent" style="display:none;">
-      <div class="section-label">Zákazka</div>
+      <div class="section-label">Stavba</div>
       <div class="trasa-bar">
         <select class="trasa-select" id="matProjSelect"></select>
+        <button class="trasa-new" id="newMatStavbaBtn">+ Nová stavba</button>
       </div>
-      <div class="empty" id="matNoProj" style="display:none; padding:16px;">Najprv vytvor projekt v Zameraní - Materiál sa viaže na tú istú zákazku.</div>
+      <div class="empty" id="matNoProj" style="display:none; padding:16px;">Najprv vytvor stavbu — klikni na "+ Nová stavba".</div>
 
       <div id="matProjBody" style="display:none;">
         <div class="mat-subnav">
           <button class="mat-subtab active" data-msub="odhad">Odhad</button>
           <button class="mat-subtab" data-msub="dodaci">Dodací list</button>
-          <button class="mat-subtab" data-msub="odber">Odber</button>
+          <button class="mat-subtab" data-msub="odber">Vidaj</button>
           <button class="mat-subtab" data-msub="spotreba">Spotreba</button>
           <button class="mat-subtab" data-msub="prehlad">Prehľad</button>
         </div>
@@ -1071,6 +1072,7 @@
 
         <!-- PREHĽAD / ZOSTATOK -->
         <div class="msub" id="msub-prehlad" style="display:none;">
+          <button class="btn-export" id="exportPdfBtn" style="display:none; margin-bottom:12px;">📥 Exportovať na PDF</button>
           <div id="prehladTable"></div>
           <div class="empty" id="prehladEmpty" style="display:none;">Zatiaľ nie sú žiadne dáta na prehľad.</div>
         </div>
@@ -1113,7 +1115,7 @@
     <button data-tab="zameranie"><span class="ic">📐</span>Zameranie</button>
     <button data-tab="auta"><span class="ic">🚐</span>Autá</button>
     <button data-tab="admin"><span class="ic">🛠️</span>Admin</button>
-    <button data-tab="material"><span class="ic">📦</span>Materiál</button>
+    <button data-tab="material"><span class="ic">📦</span>Material na stavbe</button>
     <button data-tab="sklad"><span class="ic">🏭</span>Sklad</button>
     <button data-tab="vykaz"><span class="ic">🧾</span>Výkaz</button>
     <button data-tab="tim"><span class="ic">👥</span>Tím</button>
@@ -1657,8 +1659,7 @@
       <div class="level-grid" id="matCategoryGrid" style="grid-template-columns:repeat(2,1fr);">
         <div class="level-opt" data-cat="vata">🧶 Vata</div>
         <div class="level-opt" data-cat="kaucuk">🧵 Kaučuk (Armaflex/K-Flex)</div>
-        <div class="level-opt" data-cat="plech">🔩 Plech</div>
-        <div class="level-opt" data-cat="spojovaci">🧷 Spojovací materiál</div>
+        <div class="level-opt" data-cat="spojovaci">🧷 Spoj (Lepidlo, pásky)</div>
       </div>
     </div>
     <div class="field" id="matTypeRow" style="display:none;">
@@ -2097,7 +2098,7 @@ const HOME_TILES = [
   {tab:'zameranie', ic:'📐', label:'Zameranie', permKeys:['zameranie']},
   {tab:'auta', ic:'🚐', label:'Autá', permKeys:null},
   {tab:'admin', ic:'🛠️', label:'Admin', permKeys:['admin']},
-  {tab:'material', ic:'📦', label:'Materiál', permKeys:['material_odhad','material_dodaci','material_odber','material_spotreba','material_prehlad']},
+  {tab:'material', ic:'📦', label:'Material na stavbe', permKeys:['material_odhad','material_dodaci','material_odber','material_spotreba','material_prehlad']},
   {tab:'sklad', ic:'🏭', label:'Sklad', permKeys:['sklad_view','sklad_naskladnit','sklad_odobrat']},
   {tab:'vykaz', ic:'🧾', label:'Výkaz', permKeys:null},
   {tab:'tim', ic:'👥', label:'Tím', permKeys:null},
@@ -2801,6 +2802,19 @@ $('newProjBtn').onclick = async ()=>{
   await saveProjects();
   renderProjList();
   openProject(p.id);
+};
+
+$('newMatStavbaBtn').onclick = async ()=>{
+  const name = await customPrompt('Názov stavby (napr. Bratislava Klingerka, Košice X)');
+  if(!name) return;
+  const stavba = { id: 'stavba-'+Date.now(), name: name.trim(), createdAt: Date.now() };
+  stavbyNaStavbe.push(stavba);
+  await saveStavby();
+  renderMatProjSelect();
+  currentMatStavba = stavba.id;
+  $('matProjSelect').value = stavba.id;
+  await loadMatData();
+  renderMatAll();
 };
 
 async function openProject(id){
@@ -4271,8 +4285,11 @@ $('quickReviewConfirm').onclick = async ()=>{
 };
 
 // ================= MATERIÁL (odhad/dodací list/odber/spotreba - izolácie) =================
-let currentMatProject = null;
+let currentMatProject = null; // deprecated - keep for backward compat
+let stavbyNaStavbe = []; // NEW: nezávislé stavby (Bratislava Klingerka, Košice X, atď)
+let currentMatStavba = null; // NEW: aktuálne zvolená stavba
 let matOdhad = [], matDodaci = [], matOdber = [], matSpotreba = [];
+let stavbyLoaded = false;
 
 // Priemery a hrúbky pre Materiál - NEZÁVISLÉ od Zamerania, len pre izolatérov.
 // Predvolené štandardné rady podľa reálnych rozmerov Armaflex/Isover puzdier (v cm).
@@ -4372,39 +4389,53 @@ function matLabel(item){
 let matDataLoadedForProject = null;
 async function loadMatData(){
   const keys = ['odhad','dodaci','odber','spotreba'];
-  const [a,b,c,d] = await Promise.all(keys.map(k=> window.storage.get('mat-'+k+':'+currentMatProject, true).catch(()=>null)));
+  const [a,b,c,d] = await Promise.all(keys.map(k=> window.storage.get('mat-'+k+':'+currentMatStavba, true).catch(()=>null)));
   matOdhad = a ? JSON.parse(a.value) : [];
   matDodaci = b ? JSON.parse(b.value) : [];
   matOdber = c ? JSON.parse(c.value) : [];
   matSpotreba = d ? JSON.parse(d.value) : [];
-  matDataLoadedForProject = currentMatProject;
+  matDataLoadedForProject = currentMatStavba;
 }
 async function saveMatList(kind){
   const map = { odhad: matOdhad, dodaci: matDodaci, odber: matOdber, spotreba: matSpotreba };
-  try{ await window.storage.set('mat-'+kind+':'+currentMatProject, JSON.stringify(map[kind]), true); }
+  try{ await window.storage.set('mat-'+kind+':'+currentMatStavba, JSON.stringify(map[kind]), true); }
   catch(e){ showToast('Chyba pri ukladaní'); }
 }
 
 function renderMatProjSelect(){
   const sel = $('matProjSelect');
   sel.innerHTML = '';
-  projects.forEach(p=>{
+  stavbyNaStavbe.forEach(s=>{
     const opt = document.createElement('option');
-    opt.value = p.id; opt.textContent = p.name;
+    opt.value = s.id; opt.textContent = s.name;
     sel.appendChild(opt);
   });
-  $('matNoProj').style.display = projects.length===0 ? 'block' : 'none';
-  $('matProjBody').style.display = projects.length===0 ? 'none' : 'block';
-  if(projects.length > 0){
-    currentMatProject = currentMatProject && projects.find(p=>p.id===currentMatProject) ? currentMatProject : projects[0].id;
-    sel.value = currentMatProject;
+  $('matNoProj').style.display = stavbyNaStavbe.length===0 ? 'block' : 'none';
+  $('matProjBody').style.display = stavbyNaStavbe.length===0 ? 'none' : 'block';
+  if(stavbyNaStavbe.length > 0){
+    currentMatStavba = currentMatStavba && stavbyNaStavbe.find(s=>s.id===currentMatStavba) ? currentMatStavba : stavbyNaStavbe[0].id;
+    sel.value = currentMatStavba;
   }
 }
 $('matProjSelect').addEventListener('change', async (e)=>{
-  currentMatProject = e.target.value;
+  currentMatStavba = e.target.value;
   await loadMatData();
   renderMatAll();
 });
+
+async function loadStavby(){
+  try{
+    const result = await window.storage.get('mat-stavby', true);
+    stavbyNaStavbe = result ? JSON.parse(result.value) : [];
+    stavbyLoaded = true;
+  }catch(e){ stavbyNaStavbe = []; stavbyLoaded = true; }
+}
+
+async function saveStavby(){
+  try{
+    await window.storage.set('mat-stavby', JSON.stringify(stavbyNaStavbe), true);
+  }catch(e){ showToast('Chyba pri ukladaní stavby'); }
+}
 
 function renderMatAll(){
   renderOdhadList(); renderDodaciList(); renderOdberList(); renderSpotrebaList(); renderPrehlad();
@@ -4423,11 +4454,11 @@ async function openMaterialTab(){
   $('materialContent').style.display = 'block';
   if(!workersLoaded) await loadWorkers();
   if(matPriemery.length === 0) await loadMatSizeLists();
-  if(projects.length === 0) await loadProjects();
+  if(!stavbyLoaded) await loadStavby();
   applyMaterialSubtabPermissions();
   renderMatProjSelect();
-  if(currentMatProject){
-    if(matDataLoadedForProject !== currentMatProject) await loadMatData();
+  if(currentMatStavba){
+    if(matDataLoadedForProject !== currentMatStavba) await loadMatData();
     renderMatAll();
   }
 }
@@ -5853,6 +5884,7 @@ function renderPrehlad(){
     { name:'spotrebovane', items: matSpotreba },
   ]);
   $('prehladEmpty').style.display = allKeys.length===0 ? 'block' : 'none';
+  $('exportPdfBtn').style.display = allKeys.length===0 ? 'none' : 'block';
 
   allKeys.forEach(k=>{
     const sample = sampleByKey[k];
@@ -5873,6 +5905,78 @@ function renderPrehlad(){
     wrap.appendChild(card);
   });
 }
+
+$('exportPdfBtn').onclick = ()=>{
+  if(!currentMatStavba) return;
+  const stavba = stavbyNaStavbe.find(s=>s.id===currentMatStavba);
+  const stavbaName = stavba ? stavba.name : 'Stavba';
+  const { allKeys, sampleByKey, sums } = aggregateMaterialLedger([
+    { name:'dodane', items: matDodaci.flatMap(b=>b.items) },
+    { name:'odobrate', items: matOdber },
+    { name:'spotrebovane', items: matSpotreba },
+  ]);
+  
+  let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Prehľad Material na stavbe - ${escapeHtml(stavbaName)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { font-size: 24px; margin-bottom: 10px; }
+    .meta { color: #666; margin-bottom: 20px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+    th { background-color: #f0f0f0; font-weight: bold; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    .warn { color: #d9631c; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Prehľad Material na stavbe</h1>
+  <div class="meta"><strong>${escapeHtml(stavbaName)}</strong> | ${new Date().toLocaleDateString('sk-SK')} o ${new Date().toLocaleTimeString('sk-SK')}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Materiál</th>
+        <th>Doručené</th>
+        <th>Odobraté</th>
+        <th>Spotrebované</th>
+        <th>Zostatok</th>
+        <th>Nepriznaná spotreba</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  allKeys.forEach(k=>{
+    const sample = sampleByKey[k];
+    const jednotka = sample ? sample.jednotka : '';
+    const s = sums[k];
+    const dodane = round1(s.dodane||0), odobrate = round1(s.odobrate||0), spotrebovane = round1(s.spotrebovane||0);
+    const zostatokSklad = round1(dodane - odobrate);
+    const nepriznana = round1(odobrate - spotrebovane);
+    html += `
+      <tr>
+        <td>${escapeHtml(matLabel(sample||{typ:k}))}</td>
+        <td>${dodane}${jednotka}</td>
+        <td>${odobrate}${jednotka}</td>
+        <td>${spotrebovane}${jednotka}</td>
+        <td>${zostatokSklad}${jednotka}</td>
+        <td${nepriznana>0 ? ' class="warn"' : ''}>${nepriznana}${jednotka}</td>
+      </tr>`;
+  });
+  
+  html += `
+    </tbody>
+  </table>
+</body>
+</html>`;
+  
+  const printWindow = window.open('', '', 'width=800,height=600');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.print();
+};
 
 // ---------- TESTOVACIE DÁTA (bezpečne oddelené, presne sledované ID na vymazanie) ----------
 function isoDate(d){ return d.toISOString().slice(0,10); }
