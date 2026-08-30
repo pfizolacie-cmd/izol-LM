@@ -8,7 +8,7 @@
   :root{
     --paper:#0a0e27; --ink:#f5f1ec; --steel:#00d4ff; --steel-dk:#4ef3ff;
     --line:rgba(0,212,255,0.15); --safety:#00d4ff; --safety-dk:#4ef3ff; --card:rgba(20,33,61,0.6); --ok:#00d98e;
-    --muted:#a8b5d1; --primary-blue:#00d4ff; --secondary-orange:#ff7a30;
+    --muted:#a8b5d1; --primary-blue:#00d4ff; --secondary-orange:#00d4ff;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
@@ -550,6 +550,31 @@
 </style>
 </head>
 <body>
+
+<script>
+// SIDEBAR ADAPTER - mapuje switchTab na openTab
+function switchTab(tabName){
+  const tabMap = {
+    'home': 'firma',
+    'zameranie': 'zameranie',
+    'material': 'material',
+    'sklad': 'sklad',
+    'rozpis': 'rozpis',
+    'tim': 'tim',
+    'auta': 'auta',
+    'admin': 'admin',
+    'asistent': 'asistent',
+    'profil': 'profil'
+  };
+  const mapped = tabMap[tabName] || tabName;
+  openTab(mapped);
+}
+
+// DUMMY openTab - bude replace-nutá neskôr v real JS
+function openTab(tabName){
+  console.log('Otváram tab:', tabName);
+}
+</script>
 
 <div class="sidebar" id="sidebar">
   <div class="sidebar-top">
