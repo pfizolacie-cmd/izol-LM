@@ -148,20 +148,444 @@
 
     .header-left p {
       font-size: 14px;
-  .my-status{ color:#5EE39B; }
-  .zak-card .zak-title{ color:#FFB07A; }
-  .zak-card .zak-workers{ color:#e8e2da; }
-  .zak-card .auto-field label{ color:#8a8178; }
-  .zak-card .auto-field input{ background:rgba(255,255,255,.05); border:1px solid var(--line); color:#fff; }
-  /* =================================================================== */
-</style>
+      color: var(--text-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      gap: var(--sp-xl);
+      align-items: center;
+    }
+
+    .header-info {
+      text-align: right;
+    }
+
+    .header-info .time {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .header-info .date {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ========== CONTENT AREA ========== */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sp-xl);
+    }
+
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 212, 255, 0.4);
+    }
+
+    /* ========== DASHBOARD GRID ========== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: var(--sp-lg);
+      margin-bottom: var(--sp-xl);
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        width: 60px;
+        padding: var(--sp-sm) 0;
+      }
+      
+      .sidebar-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+      }
+      
+      .main {
+        margin-left: 60px;
+      }
+    }
+
+    /* ========== CARD (GLASSMORPHIC) ========== */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-lg);
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: var(--glow-blue);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--sp-md);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin: var(--sp-md) 0;
+    }
+
+    .card-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: var(--sp-sm);
+    }
+
+    /* ========== TABS ========== */
+    .tabs-nav {
+      display: flex;
+      gap: var(--sp-sm);
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: var(--sp-lg);
+      overflow-x: auto;
+      padding-bottom: var(--sp-md);
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .tabs-nav::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .tab-btn {
+      padding: var(--sp-sm) var(--sp-md);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-blue);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -var(--sp-md);
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary-blue);
+      box-shadow: var(--glow-blue);
+    }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      padding: var(--sp-sm) var(--sp-md);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-sm);
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-blue-light);
+      box-shadow: var(--glow-blue-strong);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-orange);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--secondary-orange-light);
+      box-shadow: var(--glow-orange);
+    }
+
+    .btn-ghost {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--primary-blue);
+      border: 1px solid var(--primary-blue);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(0, 212, 255, 0.2);
+    }
+
+    /* ========== INPUTS ========== */
+    input, select, textarea {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-primary);
+      padding: var(--sp-sm) var(--sp-md);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+    }
+
+    input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* ========== PROGRESS CHART (SVG Circle) ========== */
+    .progress-circle {
+      width: 120px;
+      height: 120px;
+      margin: var(--sp-md) auto;
+    }
+
+    /* ========== CHARTS ========== */
+    .chart-container {
+      position: relative;
+      height: 200px;
+      margin: var(--sp-md) 0;
+    }
+
+    .chart-canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ========== TOAST NOTIFICATIONS ========== */
+    .toast {
+      position: fixed;
+      bottom: var(--sp-lg);
+      right: var(--sp-lg);
+      background: rgba(20, 33, 61, 0.9);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: var(--sp-md) var(--sp-lg);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* ========== AI ASISTENT ========== */
+    .ai-assistant {
+      position: fixed;
+      bottom: var(--sp-lg);
+      left: 80px + var(--sp-lg);
+      width: 350px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md), var(--glow-blue);
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      max-height: 450px;
+    }
+
+    .ai-header {
+      padding: var(--sp-md);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ai-header h3 {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sp-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    .ai-message {
+      padding: var(--sp-sm) var(--sp-md);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ai-message.user {
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--text-primary);
+      align-self: flex-end;
+      max-width: 80%;
+    }
+
+    .ai-message.assistant {
+      background: rgba(255, 122, 48, 0.15);
+      color: var(--text-secondary);
+      align-self: flex-start;
+      max-width: 85%;
+    }
+
+    .ai-input-group {
+      padding: var(--sp-md);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      gap: var(--sp-sm);
+    }
+
+    .ai-input-group input {
+      flex: 1;
+    }
+
+    .ai-input-group button {
+      padding: var(--sp-sm) var(--sp-md);
+    }
+
+    /* ========== UTILITY ========== */
+    .text-muted {
+      color: var(--text-secondary);
+    }
+
+    .text-accent-blue {
+      color: var(--primary-blue);
+    }
+
+    .text-accent-orange {
+      color: var(--secondary-orange);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .flex {
+      display: flex;
+      gap: var(--sp-md);
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .flex-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+  </style>
+
+  <!-- ========== FIREBASE SCRIPTS ========== -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+  <!-- ========== SIDEBAR ========== -->
+  <div class="sidebar">
+    <div class="sidebar-icon active" id="nav-dashboard" title="Dashboard">🏠</div>
+    <div class="sidebar-icon" id="nav-material" title="Material">⊞</div>
+    <div class="sidebar-icon" id="nav-rozpisy" title="Rozpisy">📊</div>
+    <div class="sidebar-icon" id="nav-zameranie" title="Zameranie">📍</div>
+    <div class="sidebar-icon" id="nav-dostava" title="Dostava">🚚</div>
+    <div class="sidebar-icon" id="nav-vozidla" title="Vozidlá">🚗</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-icon" id="nav-settings" title="Nastavenia">⚙️</div>
+  </div>
 
-<!-- Firebase SDK (compat) - projekt izol-lm, Firestore ako úložisko dát -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="main">
 <script>
   // AI funkcie (Rýchly zápis, Dodací list, Nákres trasy, Import rozpisu) volajú Claude cez
   // tento bezpečný "prostredník" (Cloudflare Worker), ktorý potichu pridáva API kľúč -
@@ -5911,7 +6335,7 @@ $('clearTestDataBtn').onclick = async ()=>{
     // Nie je prihlásený (alebo účet nie je priradený k žiadnemu workerovi) - zobraz prihlásenie.
     await checkBootstrapAndShowLogin();
   });
-})();
-</script>
+
+  </div><!-- /main -->
 </body>
 </html>
