@@ -678,31 +678,29 @@
       <div class="ico">🔒</div>
       AI Asistent je dostupný len pre majiteľa.
     </div>
-    <div id="asistentContent" style="display:none;">
+    <div id="asistentContent" style="display:none; flex-direction:column; height:calc(100vh - 140px);">
       <div class="section-label">🎙️ AI Asistent</div>
-      <div class="empty" style="padding:0 16px 12px; text-align:left; color:var(--muted); font-size:12.5px;">
-        Stlač mikrofón a spýtaj sa (napr. "aký je stav zákazky Bratislava" alebo "presuň Jána Nováka na Brno zajtra").
+      <div class="empty" style="padding:0 16px 8px; text-align:left; color:var(--muted); font-size:12px;">
+        Napíš, čo potrebuješ - vie čítať a upravovať dáta appky (s tvojím potvrdením), aj poradiť odborne o izoláciách/klampiarine. Vieš pripojiť aj fotku/súbor (napr. dodací list).
       </div>
 
-      <div style="text-align:center; padding:20px 16px;">
-        <button id="asistentMicBtn" style="width:90px; height:90px; border-radius:50%; background:var(--safety); border:none; font-size:36px; box-shadow:0 4px 14px rgba(0,0,0,.25);">🎙️</button>
-        <div id="asistentStatus" style="margin-top:10px; color:var(--muted); font-size:13px;">Klepni a hovor</div>
-      </div>
+      <div id="asistentChatLog" style="flex:1; overflow-y:auto; padding:0 16px; display:flex; flex-direction:column; gap:10px;"></div>
 
-      <div class="prehlad-card" id="asistentTranscript" style="display:none;"></div>
-      <div class="prehlad-card" id="asistentResponse" style="display:none;"></div>
-
-      <div class="sheet-actions" id="asistentConfirmRow" style="display:none; margin:0 16px 16px;">
+      <div class="sheet-actions" id="asistentConfirmRow" style="display:none; margin:10px 16px 0;">
         <button class="btn-cancel" id="asistentCancelBtn" style="flex:1; background:#fbe4e4; border-color:#e0a8a8; color:#a33;">❌ Zrušiť</button>
         <button class="btn-save" id="asistentConfirmBtn" style="flex:1;">✅ Potvrdiť</button>
       </div>
 
-      <div class="field" style="margin:0 16px 16px;">
-        <label>Alebo napíš text namiesto hlasu</label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="asistentTextInput" placeholder="napíš otázku/príkaz..." style="flex:1;">
-          <button class="new-car-btn" id="asistentTextSend" style="width:auto; padding:10px 16px;">Poslať</button>
-        </div>
+      <div id="asistentAttachPreview" style="display:none; margin:8px 16px 0; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span id="asistentAttachName"></span>
+        <button id="asistentAttachRemove" style="background:none; border:none; color:#a33; font-weight:700;">✕</button>
+      </div>
+
+      <div style="display:flex; gap:8px; padding:10px 16px 16px; align-items:flex-end;">
+        <label for="asistentFileInput" style="width:44px; height:44px; border-radius:10px; background:var(--card); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0;">📎</label>
+        <input type="file" id="asistentFileInput" accept="image/*,.txt" style="display:none;">
+        <textarea id="asistentTextInput" placeholder="napíš správu..." rows="1" style="flex:1; resize:none; padding:12px; border-radius:10px; border:1px solid var(--line);"></textarea>
+        <button class="new-car-btn" id="asistentTextSend" style="width:auto; padding:12px 16px; flex-shrink:0;">Poslať</button>
       </div>
     </div>
   </div>
@@ -4562,12 +4560,13 @@ async function openAsistentTab(){
     return;
   }
   $('asistentLocked').style.display = 'none';
-  $('asistentContent').style.display = 'block';
+  $('asistentContent').style.display = 'flex';
   if(!workersLoaded) await loadWorkers();
   await loadShifts();
   if(projects.length === 0) await loadProjects();
   if(!skladLoaded) await loadSkladData();
   await loadCars();
+  await loadAsistentNotes();
 }
 
 // ---------- Nástroje (tools), ktoré AI vie volať ----------
@@ -4654,6 +4653,35 @@ const AI_TOOLS = [
     name: "zisti_stav_auta",
     description: "Zistí stav STK a poistky konkrétneho auta podľa ŠPZ alebo popisu (napr. 'Vivaro', 'modrá dodávka').",
     input_schema: { type:"object", properties: { identifikator: {type:"string"} }, required:["identifikator"] }
+  },
+  {
+    name: "navrhni_hromadne_pridanie_zamestnancov",
+    description: "Pripraví NÁVRH na hromadné pridanie/aktualizáciu viacerých zamestnancov naraz zo zoznamu (napr. keď používateľ vloží zoznam mien s telefónmi). NEVYKONÁ to samo - čaká na potvrdenie.",
+    input_schema: { type:"object", properties: {
+      zoznam: { type:"array", items: { type:"object", properties: {
+        meno: {type:"string"}, telefon: {type:"string"}, rola: {type:"string", enum:["Majster","Izolatér","Klampiar","Zamestnanec"]}
+      }, required:["meno"] } }
+    }, required:["zoznam"] }
+  },
+  {
+    name: "navrhni_vymazanie_zamestnanca",
+    description: "Pripraví NÁVRH na vymazanie zamestnanca zo zoznamu tímu. NEVYKONÁ to samo - čaká na potvrdenie.",
+    input_schema: { type:"object", properties: { meno: {type:"string"} }, required:["meno"] }
+  },
+  {
+    name: "navrhni_import_rozpisu",
+    description: "Pripraví NÁVRH na import rozpisu do kalendára pre daný dátum - vytiahni skupiny (zákazka, ľudia, auto, poznámka) z textu, ktorý používateľ vložil/nadiktoval. NEVYKONÁ to samo - čaká na potvrdenie.",
+    input_schema: { type:"object", properties: {
+      datum: {type:"string", description:"YYYY-MM-DD"},
+      skupiny: { type:"array", items: { type:"object", properties: {
+        zakazka: {type:"string"}, workers: {type:"array", items:{type:"string"}}, auto: {type:"string"}, poznamka: {type:"string"}
+      }, required:["zakazka","workers"] } }
+    }, required:["datum","skupiny"] }
+  },
+  {
+    name: "zapamataj_si",
+    description: "Uloží si poznámku/pravidlo/preferenciu, aby si sa ňou riadil aj v budúcich konverzáciách (použi, keď ťa používateľ opraví alebo ti povie nejaké trvalé pravidlo).",
+    input_schema: { type:"object", properties: { text: {type:"string"} }, required:["text"] }
   },
 ];
 
@@ -4765,6 +4793,24 @@ function toolZistiStavAuta(input){
   return { najdene:true, spz:c.spz, popis:c.popis, stk:c.stk||'nezaznamenané', poistka:c.poistka||'nezaznamenané', ma_teraz: c.who||'nikto' };
 }
 
+function toolNavrhniHromadnePridanie(input){
+  pendingAsistentAction = { type:'hromadne_pridanie', zoznam: input.zoznam || [] };
+  return { pripravene:true, sprava:`Návrh na pridanie ${(input.zoznam||[]).length} zamestnancov je pripravený, čaká na potvrdenie.` };
+}
+function toolNavrhniVymazanie(input){
+  pendingAsistentAction = { type:'vymazanie_zamestnanca', meno: input.meno };
+  return { pripravene:true, sprava:'Návrh na vymazanie zamestnanca je pripravený, čaká na potvrdenie.' };
+}
+function toolNavrhniImportRozpisu(input){
+  pendingAsistentAction = { type:'import_rozpisu', datum: input.datum, skupiny: input.skupiny || [] };
+  return { pripravene:true, sprava:'Návrh na import rozpisu je pripravený, čaká na potvrdenie.' };
+}
+async function toolZapamatajSi(input){
+  asistentNotes.push(input.text);
+  try{ await window.storage.set('asistent-poznamky', JSON.stringify(asistentNotes), true); }catch(e){}
+  return { ulozene:true };
+}
+
 async function executeAiTool(name, input){
   if(name === 'ziskaj_suhrn_zakazky') return toolZiskajSuhrnZakazky(input);
   if(name === 'zoznam_najblizsich_zakaziek') return toolZoznamNajblizsichZakaziek(input);
@@ -4778,34 +4824,68 @@ async function executeAiTool(name, input){
   if(name === 'zisti_bozp_stav') return toolZistiBozpStav(input);
   if(name === 'zisti_telefon') return toolZistiTelefon(input);
   if(name === 'zisti_stav_auta') return toolZistiStavAuta(input);
+  if(name === 'navrhni_hromadne_pridanie_zamestnancov') return toolNavrhniHromadnePridanie(input);
+  if(name === 'navrhni_vymazanie_zamestnanca') return toolNavrhniVymazanie(input);
+  if(name === 'navrhni_import_rozpisu') return toolNavrhniImportRozpisu(input);
+  if(name === 'zapamataj_si') return await toolZapamatajSi(input);
   return { chyba: 'Neznámy nástroj' };
 }
 
 // ---------- Hlavný cyklus - pošle správu Claude, vybaví prípadné tool-use kolo, vráti finálny text ----------
-async function runAgentTurn(userText){
-  $('asistentStatus').textContent = 'Premýšľam…';
+// ---------- Chat história (pretrváva počas session, nie len jedna otázka naraz) ----------
+let asistentMessages = [];
+let asistentNotes = []; // "naučené" poznámky/preferencie, ktoré si agent pamätá naprieč konverzáciami
+let asistentAttachedFile = null; // { base64, mediaType, name } - čaká na odoslanie
+
+async function loadAsistentNotes(){
+  try{
+    const r = await window.storage.get('asistent-poznamky', true);
+    asistentNotes = r ? JSON.parse(r.value) : [];
+  }catch(e){ asistentNotes = []; }
+}
+
+function addChatBubble(role, html){
+  const log = $('asistentChatLog');
+  const div = document.createElement('div');
+  const isUser = role === 'user';
+  div.style.cssText = `align-self:${isUser?'flex-end':'flex-start'}; max-width:85%; padding:10px 13px; border-radius:14px; font-size:14px; line-height:1.4; ${isUser ? 'background:var(--steel); color:#fff;' : 'background:var(--card); border:1px solid var(--line);'}`;
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+async function runAgentTurn(userText, imageBlock){
   pendingAsistentAction = null;
   $('asistentConfirmRow').style.display = 'none';
 
-  const systemPrompt = `Si hlasový AI asistent majiteľa firmy Izol L&M s.r.o. (Bojnice, Slovensko) - máš dve úlohy naraz.
+  const notesText = asistentNotes.length ? `\n\nPOZNÁMKY, KTORÉ SI MÁŠ Z MINULA ZAPAMÄTAŤ A RIADIŤ SA NIMI:\n- ${asistentNotes.join('\n- ')}` : '';
+
+  const systemPrompt = `Si AI asistent majiteľa firmy Izol L&M s.r.o. (Bojnice, Slovensko) - máš tri úlohy naraz.
 
 1) SI SENIOR ODBORNÍK na tepelné, chladové a protipožiarne izolácie a klampiarske práce v priemysle a administratívnych budovách (výrobné haly, sklady, kotolne, parovody, nádrže, VZT potrubia, kancelárske/administratívne budovy). Ovládaš:
 - Kaučukové izolácie (Armaflex AC do 105°C, Armaflex HT do 150°C aj UV odolné na vonkajšie použitie; K-Flex ako porovnateľná alternatíva) - rúrkové puzdrá na menšie priemery, dosky/pásy na väčšie priemery a nádrže.
 - Minerálnu vlnu (Isover, Paroc, Rockwool, Marmus) - lamelové rohože s hliníkovou fóliou na väčšie priemery a VZT, použitie do 250-300°C, vata s pletivom (wired mat) na vysokoteplotné aplikácie ako parovody.
-- Minimálne hrúbky izolácie podľa Vyhlášky MH SR 14/2016 (do 22mm→20mm, 22-35mm→30mm, 35-100mm=priemer rúry, nad 100mm→100mm) a normy STN EN ISO 12241.
-- Klampiarske práce - oplechovanie hliníkovým/pozinkovaným/nerezovým plechom, výpočet rozvinutej šírky plechu (obvod = π × (priemer rúry + 2× hrúbka izolácie) + prekrytie na falcovanie/spoj), STN 73 3610.
-- Vieš poradiť, aký materiál/hrúbku odporučiť pre danú situáciu (napr. parovod potrebuje vysokoteplotnú izoláciu s pletivom, chladové rozvody potrebujú parozábranu proti kondenzácii, vonkajšie potrubie potrebuje UV odolný alebo oplechovaný povrch).
-Keď sa ťa niekto spýta na odbornú otázku (aký materiál použiť, akú hrúbku, ako sa počíta rozvinutá šírka...), odpovedz ako skúsený odborník z odboru - vecne, prakticky, so skutočnými technickými detailmi, nie všeobecne.
+- Minimálne hrúbky izolácie podľa Vyhlášky MH SR 14/2016 a normy STN EN ISO 12241.
+- Klampiarske práce - oplechovanie hliníkovým/pozinkovaným/nerezovým plechom, výpočet rozvinutej šírky plechu, STN 73 3610.
 
-2) SI ZÁROVEŇ HLASOVÝ OVLÁDAČ tejto konkrétnej appky - vieš čítať skutočné dáta firmy (rozpis, sklad materiálu, stav zákaziek v Zameraní, BOZP zamestnancov, telefónne čísla, stav áut) cez nástroje, a vieš pripraviť zmeny (presun človeka, poznámka, naskladnenie/odber materiálu zo skladu, založenie novej zákazky), ktoré ale VŽDY najprv čakajú na potvrdenie používateľa - nikdy nevykonávaš zmenu sám.
+2) SI OVLÁDAČ tejto appky - vieš čítať skutočné dáta (rozpis, sklad, zameranie, BOZP, telefóny, autá) cez nástroje a pripravovať zmeny (presun, poznámka, sklad, nová zákazka, hromadné pridanie/vymazanie zamestnancov, import rozpisu z vloženého textu) - VŽDY len ako návrh, čo čaká na potvrdenie tlačidlom, nikdy to nevykonávaš sám. Ak ti používateľ vloží fotku (napr. dodací list), pozri sa na ňu a pre každú položku na nej zavolaj vhodný "navrhni_*" nástroj.
 
-Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown formátovania, bez odrážok - piš plynulým textom). Na otázky o zákazkách/rozpise/sklade použi nástroje na zistenie skutočných dát, nikdy si ich nevymýšľaj. Ak používateľ žiada zmenu dát appky, použi príslušný "navrhni_*" nástroj - ten zmenu len pripraví, nikdy ju sám nevykonávaš. Po zavolaní "navrhni_*" nástroja vysvetli v odpovedi jasne a stručne, čo presne sa navrhuje, aby to používateľ mohol potvrdiť. Odborné otázky (materiál, hrúbka, normy) nepotrebujú žiadny nástroj - odpovedz na ne rovno zo svojich znalostí.`;
+3) SA UČÍŠ - ak ťa používateľ opraví alebo ti povie nejaké pravidlo/preferenciu na budúcnosť ("zapamätaj si že..."), zavolaj nástroj zapamataj_si.
 
-  let messages = [{ role:"user", content: userText }];
+Odpovedaj stručne a vecne po slovensky, bez markdown formátovania a odrážok - plynulým textom. Na otázky o dátach appky vždy použi nástroje, nikdy si nič nevymýšľaj. Odborné otázky zodpovedz rovno zo svojich znalostí bez nástroja.${notesText}`;
+
+  if(asistentMessages.length === 0){
+    asistentMessages.push({ role:"user", content: imageBlock ? [imageBlock, {type:"text", text:userText}] : userText });
+  } else {
+    asistentMessages.push({ role:"user", content: imageBlock ? [imageBlock, {type:"text", text:userText}] : userText });
+  }
+
+  const thinkingBubble = addChatBubble('assistant', '<i>Premýšľam…</i>');
   let finalText = '';
   let safetyCounter = 0;
 
-  while(safetyCounter < 6){
+  while(safetyCounter < 8){
     safetyCounter++;
     let data;
     try{
@@ -4814,10 +4894,10 @@ Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown fo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 1024,
+          max_tokens: 1536,
           system: systemPrompt,
           tools: AI_TOOLS,
-          messages
+          messages: asistentMessages
         })
       });
       data = await response.json();
@@ -4834,88 +4914,65 @@ Odpovedaj stručne, po slovensky, vhodne na prečítanie nahlas (bez markdown fo
       break;
     }
 
-    // Claude chce zavolať nástroj/e - vykonaj ich lokálne a pošli výsledky späť
-    messages.push({ role:"assistant", content: data.content });
+    asistentMessages.push({ role:"assistant", content: data.content });
     const toolResults = await Promise.all(toolUseBlocks.map(async tb=>{
       const result = await executeAiTool(tb.name, tb.input || {});
       return { type:"tool_result", tool_use_id: tb.id, content: JSON.stringify(result) };
     }));
-    messages.push({ role:"user", content: toolResults });
+    asistentMessages.push({ role:"user", content: toolResults });
   }
 
-  $('asistentStatus').textContent = 'Klepni a hovor';
-  $('asistentResponse').style.display = 'block';
-  $('asistentResponse').textContent = finalText;
-  speakText(finalText);
+  thinkingBubble.innerHTML = escapeHtml(finalText).replace(/\n/g,'<br>');
 
   if(pendingAsistentAction){
     $('asistentConfirmRow').style.display = 'flex';
   }
 }
 
-function speakText(text){
-  try{
-    if(!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'sk-SK';
-    window.speechSynthesis.speak(utter);
-  }catch(e){}
-}
-
-// ---------- Rozpoznávanie reči (mikrofón) ----------
-let asistentRecognition = null;
-let asistentListening = false;
-
-function getSpeechRecognition(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const r = new SR();
-  r.lang = 'sk-SK';
-  r.interimResults = false;
-  r.maxAlternatives = 1;
-  return r;
-}
-
-$('asistentMicBtn').onclick = ()=>{
-  if(asistentListening){
-    if(asistentRecognition) asistentRecognition.stop();
-    return;
-  }
-  asistentRecognition = getSpeechRecognition();
-  if(!asistentRecognition){
-    showToast('Rozpoznávanie reči nie je v tomto prehliadači podporované - skús text nižšie.');
-    return;
-  }
-  asistentListening = true;
-  $('asistentStatus').textContent = '🔴 Počúvam…';
-  $('asistentMicBtn').style.background = '#c0392b';
-
-  asistentRecognition.onresult = (event)=>{
-    const transcript = event.results[0][0].transcript;
-    $('asistentTranscript').style.display = 'block';
-    $('asistentTranscript').innerHTML = `<b>Ty:</b> ${escapeHtml(transcript)}`;
-    runAgentTurn(transcript);
+$('asistentFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const dataUrl = ev.target.result;
+    asistentAttachedFile = {
+      base64: dataUrl.split(',')[1],
+      mediaType: dataUrl.match(/data:(.*?);/)[1],
+      name: file.name,
+    };
+    $('asistentAttachPreview').style.display = 'flex';
+    $('asistentAttachName').textContent = '📎 ' + file.name;
   };
-  asistentRecognition.onerror = ()=>{
-    showToast('Nepodarilo sa rozpoznať reč, skús to znova alebo napíš text.');
-  };
-  asistentRecognition.onend = ()=>{
-    asistentListening = false;
-    $('asistentMicBtn').style.background = 'var(--safety)';
-    if($('asistentStatus').textContent === '🔴 Počúvam…') $('asistentStatus').textContent = 'Klepni a hovor';
-  };
-  asistentRecognition.start();
+  reader.readAsDataURL(file);
+});
+$('asistentAttachRemove').onclick = ()=>{
+  asistentAttachedFile = null;
+  $('asistentAttachPreview').style.display = 'none';
+  $('asistentFileInput').value = '';
 };
 
-$('asistentTextSend').onclick = ()=>{
+$('asistentTextSend').onclick = async ()=>{
   const text = $('asistentTextInput').value.trim();
-  if(!text) return;
-  $('asistentTranscript').style.display = 'block';
-  $('asistentTranscript').innerHTML = `<b>Ty:</b> ${escapeHtml(text)}`;
+  if(!text && !asistentAttachedFile) return;
+
+  let imageBlock = null;
+  let userBubbleHtml = escapeHtml(text);
+  if(asistentAttachedFile){
+    imageBlock = { type:"image", source:{ type:"base64", media_type: asistentAttachedFile.mediaType, data: asistentAttachedFile.base64 } };
+    userBubbleHtml = `📎 ${escapeHtml(asistentAttachedFile.name)}<br>${userBubbleHtml}`;
+  }
+  addChatBubble('user', userBubbleHtml || '📎 príloha');
+
   $('asistentTextInput').value = '';
-  runAgentTurn(text);
+  asistentAttachedFile = null;
+  $('asistentAttachPreview').style.display = 'none';
+  $('asistentFileInput').value = '';
+
+  await runAgentTurn(text || 'Pozri sa na priloženú fotku a povedz mi, čo tam vidíš / navrhni čo treba.', imageBlock);
 };
+$('asistentTextInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); $('asistentTextSend').click(); }
+});
 
 $('asistentCancelBtn').onclick = ()=>{
   pendingAsistentAction = null;
@@ -4963,6 +5020,37 @@ $('asistentConfirmBtn').onclick = async ()=>{
     projects.push({ id:newId, name: action.nazov });
     await saveProjects();
     showToast(`Zákazka "${action.nazov}" založená v Zameraní`);
+  } else if(action.type === 'hromadne_pridanie'){
+    await loadWorkers();
+    action.zoznam.forEach(z=>{
+      const existing = workers.find(w=>w.name.toLowerCase()===z.meno.toLowerCase());
+      if(existing){ if(z.telefon) existing.telefon = z.telefon; if(z.rola) existing.role = z.rola; }
+      else{ workers.push({ id:'w-'+Date.now()+Math.random().toString(36).slice(2,6), name:z.meno, role:z.rola||'Zamestnanec', telefon:z.telefon||'', skills:{} }); }
+    });
+    await window.storage.set('workers', JSON.stringify(workers), true);
+    showToast(`Spracovaných ${action.zoznam.length} zamestnancov`);
+    renderWorkerList();
+  } else if(action.type === 'vymazanie_zamestnanca'){
+    await loadWorkers();
+    workers = workers.filter(w=>w.name.toLowerCase() !== action.meno.toLowerCase());
+    await window.storage.set('workers', JSON.stringify(workers), true);
+    showToast(`Zamestnanec ${action.meno} vymazaný`);
+    renderWorkerList();
+  } else if(action.type === 'import_rozpisu'){
+    await loadShifts();
+    action.skupiny.forEach(g=>{
+      const poznamkaParts = [];
+      if(g.auto) poznamkaParts.push('Auto: '+g.auto);
+      if(g.poznamka) poznamkaParts.push(g.poznamka);
+      const poznamka = poznamkaParts.join(' | ');
+      (g.workers||[]).forEach(w=>{
+        const existing = findEntry(action.datum, w);
+        if(existing){ Object.assign(existing, { zakazka:g.zakazka, poznamka }); }
+        else{ shifts.push({ id:'s-'+Date.now()+Math.random().toString(36).slice(2,6), date:action.datum, worker:w, zakazka:g.zakazka, from:'', to:'', poznamka }); }
+      });
+    });
+    await saveShifts();
+    showToast('Rozpis naimportovaný');
   }
 
   pendingAsistentAction = null;
