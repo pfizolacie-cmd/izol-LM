@@ -609,9 +609,6 @@ function switchTab(tabName){
 </div>
 
 <!-- Firebase SDK (compat) - projekt izol-lm, Firestore ako úložisko dát -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script async>
   // AI funkcie (Rýchly zápis, Dodací list, Nákres trasy, Import rozpisu) volajú Claude cez
   // tento bezpečný "prostredník" (Cloudflare Worker), ktorý potichu pridáva API kľúč -
@@ -627,9 +624,25 @@ function switchTab(tabName){
     appId: "1:1071187272981:web:a4a3b443a79f196745751c",
     measurementId: "G-MN1SMFYP76"
   };
-  firebase.initializeApp(firebaseConfig);
-  const _db = firebase.firestore();
-  const _auth = firebase.auth();
+  
+  // Bezpečne inicializovať Firebase - čakaj kým bude ready
+  if(typeof firebase !== 'undefined'){
+    try {
+      firebase.initializeApp(firebaseConfig);
+    } catch(e) {
+      console.warn('Firebase init error (možno už initialized):', e);
+    }
+  } else {
+    // Firebase ešte nie je loaded - čakaj
+    setTimeout(() => {
+      if(typeof firebase !== 'undefined'){
+        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+      }
+    }, 500);
+  }
+  
+  const _db = firebase ? firebase.firestore() : null;
+  const _auth = firebase ? firebase.auth() : null;
   let _fbUid = null;
 
   // window.storage polyfill - rovnaké API (get/set/delete/list), backend je Firestore.
@@ -6140,6 +6153,9 @@ $('exportPdfBtn').onclick = ()=>{
   html += `
     </tbody>
   </table>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </body>
 </html>`;
   
@@ -6345,5 +6361,8 @@ $('clearTestDataBtn').onclick = async ()=>{
   });
 })();
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </body>
 </html>
