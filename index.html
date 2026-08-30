@@ -6,9 +6,9 @@
 <title>Izol L&M — Tím</title>
 <style>
   :root{
-    --paper:#f3f1ea; --ink:#22262b; --steel:#26445e; --steel-dk:#1a3247;
-    --line:#c9c4b6; --safety:#d9631c; --safety-dk:#b34f14; --card:#fffdf8; --ok:#2f7a4f;
-    --muted:#8a8272;
+    --paper:#0a0e27; --ink:#f5f1ec; --steel:#00d4ff; --steel-dk:#4ef3ff;
+    --line:rgba(0,212,255,0.15); --safety:#ff7a30; --safety-dk:#ff9a5e; --card:rgba(20,33,61,0.6); --ok:#00d98e;
+    --muted:#a8b5d1; --primary-blue:#00d4ff; --secondary-orange:#ff7a30;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
@@ -365,8 +365,8 @@
 
   /* ================= Dark warm glass theme ================= */
   :root{
-    --paper:#0d0a08; --ink:#F5F1EC; --steel:#FF7A30; --steel-dk:#FFFFFF;
-    --line:rgba(255,255,255,.10); --safety:#FF7A30; --safety-dk:#FF9A5C; --card:rgba(255,255,255,.055);
+    --paper:#0a0e27; --ink:#F5F1EC; --steel:#00d4ff; --steel-dk:#4ef3ff;
+    --line:rgba(255,255,255,.10); --safety:#00d4ff; --safety-dk:#00d4ff; --card:rgba(255,255,255,.055);
     --ok:#3ECF7A; --muted:#9C9389;
   }
   html, body{
@@ -376,7 +376,7 @@
       radial-gradient(700px 500px at 15% -5%, rgba(255,122,48,.16), transparent 60%),
       radial-gradient(600px 500px at 100% 20%, rgba(255,90,20,.10), transparent 55%),
       radial-gradient(800px 600px at 50% 120%, rgba(120,60,20,.14), transparent 60%),
-      #0d0a08;
+      #0a0e27;
     background-attachment:fixed;
   }
   .mono{ font-family:-apple-system,BlinkMacSystemFont,sans-serif; font-variant-numeric:tabular-nums; }
@@ -503,9 +503,95 @@
   .zak-card .auto-field label{ color:#8a8178; }
   .zak-card .auto-field input{ background:rgba(255,255,255,.05); border:1px solid var(--line); color:#fff; }
   /* =================================================================== */
+  
+  /* ===== SIDEBAR AARU STYLE ===== */
+  body { display: flex; }
+  
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 80px; height: 100vh;
+    background: rgba(10, 14, 39, 0.8); backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(0, 212, 255, 0.15);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0; gap: 20px;
+    z-index: 1000;
+  }
+  
+  .sidebar-logo {
+    width: 50px; height: 50px;
+    background: linear-gradient(135deg, var(--steel) 0%, var(--safety) 100%);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 16px;
+  }
+  
+  .sidebar-icons { display: flex; flex-direction: column; gap: 16px; }
+  
+  .sidebar-icon {
+    width: 50px; height: 50px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); transition: all 0.3s ease;
+    border-radius: 12px; border: 1px solid transparent;
+  }
+  
+  .sidebar-icon:hover {
+    color: var(--steel); background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.2);
+  }
+  
+  .sidebar-bottom { margin-top: auto; }
+  
+  #app { margin-left: 80px; width: calc(100% - 80px); }
+  
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .sidebar-icon { width: 45px; height: 45px; }
+    #app { margin-left: 60px; width: calc(100% - 60px); }
+  }
+
 </style>
 </head>
 <body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-logo">IZL</div>
+  </div>
+  
+  <div class="sidebar-icons">
+    <div class="sidebar-icon" onclick="switchTab('home')" title="Domov">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('zameranie')" title="Zameranie">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('material')" title="Materiál">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('sklad')" title="Sklad">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"></path><path d="M4 6l8-4 8 4"></path></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('rozpis')" title="Rozpis">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('tim')" title="Tím">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('auta')" title="Autá">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-10a4 4 0 0 1 4-4h1M9 4h6v4H9z"></path><circle cx="7.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('admin')" title="Admin">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><path d="M12 1v6m0 6v6"></path><path d="M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24"></path><path d="M1 12h6m6 0h6"></path><path d="M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24"></path></svg>
+    </div>
+    <div class="sidebar-icon" onclick="switchTab('asistent')" title="Asistent (AI)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+    </div>
+  </div>
+  
+  <div class="sidebar-bottom">
+    <div class="sidebar-icon" onclick="switchTab('profil')" title="Profil">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    </div>
+  </div>
+</div>
 
 <!-- Firebase SDK (compat) - projekt izol-lm, Firestore ako úložisko dát -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -5929,7 +6015,7 @@ $('exportPdfBtn').onclick = ()=>{
     th, td { border: 1px solid #333; padding: 10px; text-align: left; }
     th { background-color: #f0f0f0; font-weight: bold; }
     tr:nth-child(even) { background-color: #fafafa; }
-    .warn { color: #d9631c; font-weight: bold; }
+    .warn { color: #ff7a30; font-weight: bold; }
   </style>
 </head>
 <body>
