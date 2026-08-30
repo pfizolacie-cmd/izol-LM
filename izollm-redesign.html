@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Izol L@M — Tímová appka</title>
+  <style>
+    /* ========== CSS PREMENNÉ (COLOR SCHEME) ========== */
+    :root {
+      /* Background & Gradients */
+      --bg-dark: #0a0e27;
+      --bg-grad: linear-gradient(135deg, #0a0e27 0%, #1a2a4e 50%, #2d1b3d 100%);
+      --bg-overlay: rgba(10, 14, 39, 0.8);
+      
+      /* Accents */
+      --primary-blue: #00d4ff;
+      --primary-blue-light: #4ef3ff;
+      --secondary-orange: #ff7a30;
+      --secondary-orange-light: #ff9b5e;
+      --accent-green: #00d98e;
+      --accent-purple: #b84bff;
+      
+      /* Text */
+      --text-primary: #ffffff;
+      --text-secondary: #a8b5d1;
+      --text-tertiary: #6b7a99;
+      
+      /* Cards & Elements */
+      --card-bg: rgba(20, 33, 61, 0.6);
+      --card-bg-alt: rgba(25, 40, 75, 0.5);
+      --card-border: rgba(0, 212, 255, 0.15);
+      --card-border-hover: rgba(0, 212, 255, 0.3);
+      --input-bg: rgba(15, 25, 50, 0.7);
+      --input-border: rgba(0, 212, 255, 0.2);
+      
+      /* Shadows & Glows */
+      --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.4);
+      --glow-blue: 0 0 30px rgba(0, 212, 255, 0.15);
+      --glow-orange: 0 0 30px rgba(255, 122, 48, 0.15);
+      --glow-blue-strong: 0 0 50px rgba(0, 212, 255, 0.25);
+      
+      /* Spacing */
+      --sp-xs: 4px;
+      --sp-sm: 8px;
+      --sp-md: 16px;
+      --sp-lg: 24px;
+      --sp-xl: 32px;
+      
+      /* Border radius */
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    /* ========== RESET & BASE ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-grad);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ========== SIDEBAR NAVIGÁCIA ========== */
+    .sidebar {
+      width: 80px;
+      background: rgba(10, 14, 39, 0.7);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--sp-md) 0;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .sidebar-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 24px;
+      transition: all 0.3s ease;
+      margin: var(--sp-sm) 0;
+      position: relative;
+    }
+
+    .sidebar-icon:hover {
+      color: var(--primary-blue);
+      background: rgba(0, 212, 255, 0.1);
+      box-shadow: var(--glow-blue);
+    }
+
+    .sidebar-icon.active {
+      color: var(--primary-blue);
+      background: rgba(0, 212, 255, 0.15);
+      box-shadow: var(--glow-blue-strong);
+    }
+
+    .sidebar-spacer {
+      flex: 1;
+    }
+
+    /* ========== MAIN CONTAINER ========== */
+    .main {
+      margin-left: 80px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ========== HEADER ========== */
+    .header {
+      background: rgba(10, 14, 39, 0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
+      padding: var(--sp-lg) var(--sp-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--sp-lg);
+    }
+
+    .header-left h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: var(--sp-sm);
+      color: var(--text-primary);
+    }
+
+    .header-left p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      gap: var(--sp-xl);
+      align-items: center;
+    }
+
+    .header-info {
+      text-align: right;
+    }
+
+    .header-info .time {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .header-info .date {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ========== CONTENT AREA ========== */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sp-xl);
+    }
+
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 212, 255, 0.4);
+    }
+
+    /* ========== DASHBOARD GRID ========== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: var(--sp-lg);
+      margin-bottom: var(--sp-xl);
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        width: 60px;
+        padding: var(--sp-sm) 0;
+      }
+      
+      .sidebar-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+      }
+      
+      .main {
+        margin-left: 60px;
+      }
+    }
+
+    /* ========== CARD (GLASSMORPHIC) ========== */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-lg);
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: var(--glow-blue);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--sp-md);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin: var(--sp-md) 0;
+    }
+
+    .card-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: var(--sp-sm);
+    }
+
+    /* ========== TABS ========== */
+    .tabs-nav {
+      display: flex;
+      gap: var(--sp-sm);
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: var(--sp-lg);
+      overflow-x: auto;
+      padding-bottom: var(--sp-md);
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .tabs-nav::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .tab-btn {
+      padding: var(--sp-sm) var(--sp-md);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-blue);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -var(--sp-md);
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary-blue);
+      box-shadow: var(--glow-blue);
+    }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      padding: var(--sp-sm) var(--sp-md);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-sm);
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-blue-light);
+      box-shadow: var(--glow-blue-strong);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-orange);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--secondary-orange-light);
+      box-shadow: var(--glow-orange);
+    }
+
+    .btn-ghost {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--primary-blue);
+      border: 1px solid var(--primary-blue);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(0, 212, 255, 0.2);
+    }
+
+    /* ========== INPUTS ========== */
+    input, select, textarea {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-primary);
+      padding: var(--sp-sm) var(--sp-md);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+    }
+
+    input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* ========== PROGRESS CHART (SVG Circle) ========== */
+    .progress-circle {
+      width: 120px;
+      height: 120px;
+      margin: var(--sp-md) auto;
+    }
+
+    /* ========== CHARTS ========== */
+    .chart-container {
+      position: relative;
+      height: 200px;
+      margin: var(--sp-md) 0;
+    }
+
+    .chart-canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ========== TOAST NOTIFICATIONS ========== */
+    .toast {
+      position: fixed;
+      bottom: var(--sp-lg);
+      right: var(--sp-lg);
+      background: rgba(20, 33, 61, 0.9);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: var(--sp-md) var(--sp-lg);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* ========== AI ASISTENT ========== */
+    .ai-assistant {
+      position: fixed;
+      bottom: var(--sp-lg);
+      left: 80px + var(--sp-lg);
+      width: 350px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md), var(--glow-blue);
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      max-height: 450px;
+    }
+
+    .ai-header {
+      padding: var(--sp-md);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ai-header h3 {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sp-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    .ai-message {
+      padding: var(--sp-sm) var(--sp-md);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ai-message.user {
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--text-primary);
+      align-self: flex-end;
+      max-width: 80%;
+    }
+
+    .ai-message.assistant {
+      background: rgba(255, 122, 48, 0.15);
+      color: var(--text-secondary);
+      align-self: flex-start;
+      max-width: 85%;
+    }
+
+    .ai-input-group {
+      padding: var(--sp-md);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      gap: var(--sp-sm);
+    }
+
+    .ai-input-group input {
+      flex: 1;
+    }
+
+    .ai-input-group button {
+      padding: var(--sp-sm) var(--sp-md);
+    }
+
+    /* ========== UTILITY ========== */
+    .text-muted {
+      color: var(--text-secondary);
+    }
+
+    .text-accent-blue {
+      color: var(--primary-blue);
+    }
+
+    .text-accent-orange {
+      color: var(--secondary-orange);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .flex {
+      display: flex;
+      gap: var(--sp-md);
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .flex-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+  </style>
+
+  <!-- ========== FIREBASE SCRIPTS ========== -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <!-- ========== SIDEBAR ========== -->
+  <div class="sidebar">
+    <div class="sidebar-icon active" id="nav-dashboard" title="Dashboard">🏠</div>
+    <div class="sidebar-icon" id="nav-material" title="Material">⊞</div>
+    <div class="sidebar-icon" id="nav-rozpisy" title="Rozpisy">📊</div>
+    <div class="sidebar-icon" id="nav-zameranie" title="Zameranie">📍</div>
+    <div class="sidebar-icon" id="nav-dostava" title="Dostava">🚚</div>
+    <div class="sidebar-icon" id="nav-vozidla" title="Vozidlá">🚗</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-icon" id="nav-settings" title="Nastavenia">⚙️</div>
+  </div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="main">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Dobrý večer, <span id="userName">Peter</span></h1>
+        <p>Staraj sa o tím a majú všetci čo potrebujú.</p>
+      </div>
+      <div class="header-right">
+        <div class="header-info">
+          <div class="time" id="headerTime">00:00 PM</div>
+          <div class="date" id="headerDate">May 24, 2025</div>
+          <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Saturday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div id="dashboard-view">
+        <div class="dashboard-grid">
+          <!-- CARD 1: Material na stavbe -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Material na stavbe</div>
+                <div class="card-subtitle">Bratislava Klingerka</div>
+              </div>
+            </div>
+            <div class="card-value">78%</div>
+            <div class="card-label">Dostupnosť</div>
+            <div class="chart-container">
+              <svg class="progress-circle" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--card-bg-alt)" stroke-width="8"/>
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--primary-blue)" stroke-width="8" 
+                  stroke-dasharray="301.6" stroke-dashoffset="66" stroke-linecap="round" transform="rotate(-90 70 70)"/>
+                <text x="70" y="75" font-size="20" font-weight="700" text-anchor="middle" fill="var(--text-primary)">20ks</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- CARD 2: Spotreba týmom -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Spotreba týmom</div>
+                <div class="card-subtitle">Tento týždeň</div>
+              </div>
+            </div>
+            <div class="card-value">234 m²</div>
+            <div class="card-label">Celková spotreba</div>
+            <div class="chart-container">
+              <svg class="chart-canvas" viewBox="0 0 350 150">
+                <!-- Area chart line -->
+                <path d="M 0 100 Q 30 80 60 70 T 120 50 T 180 60 T 240 40 T 300 30 L 300 150 L 0 150 Z" 
+                  fill="url(#gradientArea)" opacity="0.3"/>
+                <path d="M 0 100 Q 30 80 60 70 T 120 50 T 180 60 T 240 40 T 300 30" 
+                  stroke="var(--primary-blue)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <defs>
+                  <linearGradient id="gradientArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:var(--primary-blue);stop-opacity:0.3" />
+                    <stop offset="100%" style="stop-color:var(--primary-blue);stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+
+          <!-- CARD 3: Rozpis týmu -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Rozpis týmu</div>
+                <div class="card-subtitle">Pondelok - Piatok</div>
+              </div>
+            </div>
+            <div class="card-value">42 h</div>
+            <div class="card-label">Odpracované hodiny</div>
+            <div class="chart-container">
+              <svg class="chart-canvas" viewBox="0 0 300 120">
+                <!-- Bar chart -->
+                <rect x="20" y="80" width="30" height="40" fill="var(--primary-blue)" opacity="0.8"/>
+                <rect x="60" y="60" width="30" height="60" fill="var(--secondary-orange)" opacity="0.8"/>
+                <rect x="100" y="70" width="30" height="50" fill="var(--primary-blue)" opacity="0.8"/>
+                <rect x="140" y="50" width="30" height="70" fill="var(--secondary-orange)" opacity="0.8"/>
+                <rect x="180" y="65" width="30" height="55" fill="var(--primary-blue)" opacity="0.8"/>
+                <text x="35" y="130" font-size="11" text-anchor="middle" fill="var(--text-tertiary)">Po</text>
+                <text x="75" y="130" font-size="11" text-anchor="middle" fill="var(--text-tertiary)">Ut</text>
+                <text x="115" y="130" font-size="11" text-anchor="middle" fill="var(--text-tertiary)">St</text>
+                <text x="155" y="130" font-size="11" text-anchor="middle" fill="var(--text-tertiary)">Št</text>
+                <text x="195" y="130" font-size="11" text-anchor="middle" fill="var(--text-tertiary)">Pi</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- CARD 4: Stav vozidiel -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Vozidlá</div>
+                <div class="card-subtitle">Status dostupnosti</div>
+              </div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div class="flex-between">
+                <span class="text-muted">Van 1 (Sprinter)</span>
+                <span class="text-accent-blue">✓ Dostupná</span>
+              </div>
+              <div class="flex-between">
+                <span class="text-muted">Van 2 (Boxer)</span>
+                <span class="text-accent-orange">⚠ V Service</span>
+              </div>
+              <div class="flex-between">
+                <span class="text-muted">Tipper (MAN)</span>
+                <span class="text-accent-green">✓ Na stavbe</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 5: Blížiace sa úlohy -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Nasledujúce úlohy</div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div class="flex-between">
+                <div>
+                  <div style="font-size: 13px; font-weight: 500;">25 MAY - Stretnutie projektu</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary);">10:00 - 11:00 AM</div>
+                </div>
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary-blue);"></div>
+              </div>
+              <div class="flex-between">
+                <div>
+                  <div style="font-size: 13px; font-weight: 500;">26 MAY - Kontrola stavby</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary);">14:00 - 15:00 PM</div>
+                </div>
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--secondary-orange);"></div>
+              </div>
+              <div class="flex-between">
+                <div>
+                  <div style="font-size: 13px; font-weight: 500;">28 MAY - Klientsky hovor</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary);">11:00 - 12:00 PM</div>
+                </div>
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 6: Systém Status -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Systém Status</div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Storage</span>
+                  <span class="text-accent-blue">78%</span>
+                </div>
+                <div style="height: 4px; background: var(--input-bg); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: 78%; background: var(--primary-blue); border-radius: 2px;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Firebase</span>
+                  <span class="text-accent-blue">✓ Online</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Pracovníci</span>
+                  <span class="text-accent-blue">8 / 12</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATERIAL VIEW (hidden) -->
+      <div id="material-view" class="hidden">
+        <!-- Select Stavby -->
+        <div style="margin-bottom: var(--sp-lg); display: flex; gap: var(--sp-md); align-items: center;">
+          <label style="color: var(--text-secondary); min-width: 120px;">Stavba:</label>
+          <select id="stavbySelect" style="flex: 1; max-width: 400px;">
+            <option value="">-- Vyber stavbu --</option>
+          </select>
+          <button class="btn btn-primary" id="newStavbaBtn">+ Nová stavba</button>
+        </div>
+
+        <!-- Material Tabs -->
+        <div class="tabs-nav" id="materialTabs">
+          <button class="tab-btn active" data-tab="material-material">Material</button>
+          <button class="tab-btn" data-tab="material-dodaci">Dodací list</button>
+          <button class="tab-btn" data-tab="material-vidaj">Vidaj</button>
+          <button class="tab-btn" data-tab="material-spotreba">Spotreba</button>
+          <button class="tab-btn" data-tab="material-prehled">Prehľad</button>
+        </div>
+
+        <!-- MATERIAL - Odhad -->
+        <div id="material-material" class="material-tab-content">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-md);">
+              <h3 style="color: var(--text-primary); font-size: 16px;">Materiál na stavbe</h3>
+              <button class="btn btn-secondary" id="addMaterialBtn">+ Pridať materiál</button>
+            </div>
+            <div id="materialList" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="materialEmpty" class="text-muted" style="padding: var(--sp-lg); text-align: center;">
+              Žiadny materiál. Klikni na "+ Pridať materiál".
+            </div>
+          </div>
+        </div>
+
+        <!-- DODACÍ LIST -->
+        <div id="material-dodaci" class="material-tab-content hidden">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-md);">
+              <h3 style="color: var(--text-primary); font-size: 16px;">Príjem materiálu</h3>
+              <button class="btn btn-secondary" id="addPrijemBtn">📷 Dodací list</button>
+            </div>
+            <div id="prijemList" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="prijemEmpty" class="text-muted" style="padding: var(--sp-lg); text-align: center;">
+              Žiadny príjem. Klikni na "📷 Dodací list".
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDAJ -->
+        <div id="material-vidaj" class="material-tab-content hidden">
+          <div class="card">
+            <h3 style="color: var(--text-primary); font-size: 16px; margin-bottom: var(--sp-md);">Na stavbe teraz</h3>
+            <div id="vidajList" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="vidajEmpty" class="text-muted" style="padding: var(--sp-lg); text-align: center;">
+              Prázdna stavba.
+            </div>
+          </div>
+        </div>
+
+        <!-- SPOTREBA -->
+        <div id="material-spotreba" class="material-tab-content hidden">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-md);">
+              <h3 style="color: var(--text-primary); font-size: 16px;">Spotreba materiálu</h3>
+              <button class="btn btn-secondary" id="addSpotrebaBtn">+ Zapísať spotrebu</button>
+            </div>
+            <div id="spotrebaList" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="spotrebaEmpty" class="text-muted" style="padding: var(--sp-lg); text-align: center;">
+              Žiadna spotreba.
+            </div>
+          </div>
+        </div>
+
+        <!-- PREHĽAD -->
+        <div id="material-prehled" class="material-tab-content hidden">
+          <div class="dashboard-grid">
+            <!-- Dostupnosť -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Dostupnosť materiálu</div>
+                  <div class="card-subtitle" id="prehledStavba">--</div>
+                </div>
+              </div>
+              <div class="card-value" id="prehledDostupne">--</div>
+              <div class="card-label">Dostupné ks</div>
+              <div style="margin-top: var(--sp-md); display: grid; gap: var(--sp-sm);">
+                <div class="flex-between">
+                  <span class="text-secondary">Doručené:</span>
+                  <span id="prehledDodane" class="text-accent-blue">0</span>
+                </div>
+                <div class="flex-between">
+                  <span class="text-secondary">Vidaj (odobrané):</span>
+                  <span id="prehledOdobrate" class="text-accent-blue">0</span>
+                </div>
+                <div class="flex-between">
+                  <span class="text-secondary">Spotrebované:</span>
+                  <span id="prehledSpotrebovane" class="text-accent-orange">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rozpis podľa typu -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Rozpis materiálu</div>
+              </div>
+              <div id="prehledRozpis" style="display: grid; gap: var(--sp-sm);"></div>
+            </div>
+
+            <!-- PDF Export -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Exporty</div>
+              </div>
+              <button class="btn btn-primary" id="exportPdfBtn" style="width: 100%;">📥 Exportovať na PDF</button>
+              <div style="font-size: 12px; color: var(--text-tertiary); margin-top: var(--sp-md);">
+                Vygeneruje tabuľku so stavom materiálu pre tlač alebo uloženie.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ZAMERANIE VIEW (hidden) -->
+      <div id="zameranie-view" class="hidden">
+        <div class="dashboard-grid">
+          <!-- Nové zameranie -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Nové zameranie</div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div>
+                <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Stavba:</label>
+                <input type="text" id="zameranieStavba" placeholder="Názov stavby, Mesto" style="width: 100%;">
+              </div>
+              <div>
+                <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Priemer trubice (mm):</label>
+                <input type="number" id="zamerianiePriemer" placeholder="Napr. 89" style="width: 100%;">
+              </div>
+              <div>
+                <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Hrúbka izolácie (mm):</label>
+                <input type="number" id="zameranieHrubka" placeholder="Napr. 50" style="width: 100%;">
+              </div>
+              <div>
+                <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Dĺžka potrubia (m):</label>
+                <input type="number" id="zamerianieDlzka" placeholder="Napr. 125" style="width: 100%;">
+              </div>
+              <button class="btn btn-primary" id="saveZameranieBtn" style="width: 100%;">✓ Uložiť zameranie</button>
+            </div>
+          </div>
+
+          <!-- Posledné zamerania -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Posledné zamerania</div>
+            </div>
+            <div id="zameranieList" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="zameranieEmpty" class="text-muted" style="padding: var(--sp-lg); text-align: center;">
+              Žiadne zamerania.
+            </div>
+          </div>
+
+          <!-- Štatistika -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Štatistika</div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Celkem projektov</span>
+                  <span class="text-accent-blue" style="font-weight: 600;">12</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Zameraní tento mesiac</span>
+                  <span class="text-accent-blue" style="font-weight: 600;">28</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between" style="margin-bottom: 6px;">
+                  <span class="text-muted">Priemerni m/projekt</span>
+                  <span class="text-accent-blue" style="font-weight: 600;">245 m</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROZPISY VIEW (hidden) -->
+      <div id="rozpisy-view" class="hidden">
+        <div class="dashboard-grid">
+          <!-- Týždeň -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Týždeň</div>
+                <div class="card-subtitle" id="rozpTyzdenText">24. - 28. máj 2025</div>
+              </div>
+            </div>
+            <div id="rozpTyzdenChart" class="chart-container">
+              <svg class="chart-canvas" viewBox="0 0 350 180">
+                <!-- Week activity bars -->
+                <rect x="20" y="120" width="35" height="50" fill="var(--primary-blue)" opacity="0.8"/>
+                <rect x="65" y="80" width="35" height="90" fill="var(--secondary-orange)" opacity="0.8"/>
+                <rect x="110" y="100" width="35" height="70" fill="var(--primary-blue)" opacity="0.8"/>
+                <rect x="155" y="60" width="35" height="110" fill="var(--secondary-orange)" opacity="0.8"/>
+                <rect x="200" y="90" width="35" height="80" fill="var(--primary-blue)" opacity="0.8"/>
+                
+                <!-- Labels -->
+                <text x="37" y="180" font-size="12" text-anchor="middle" fill="var(--text-tertiary)">Po</text>
+                <text x="82" y="180" font-size="12" text-anchor="middle" fill="var(--text-tertiary)">Ut</text>
+                <text x="127" y="180" font-size="12" text-anchor="middle" fill="var(--text-tertiary)">St</text>
+                <text x="172" y="180" font-size="12" text-anchor="middle" fill="var(--text-tertiary)">Št</text>
+                <text x="217" y="180" font-size="12" text-anchor="middle" fill="var(--text-tertiary)">Pi</text>
+              </svg>
+            </div>
+            <div style="display: grid; gap: var(--sp-sm); margin-top: var(--sp-md);">
+              <div class="flex-between">
+                <span class="text-muted">Celkovo</span>
+                <span class="text-accent-blue" id="rozpCelkem">210 h</span>
+              </div>
+              <div class="flex-between">
+                <span class="text-muted">Priemer</span>
+                <span class="text-accent-blue" id="rozpPriemer">42 h/deň</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pracovníci rozdelenie -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Rozdelenie tímu</div>
+            </div>
+            <div id="rozpPracovnici" style="display: grid; gap: var(--sp-md);"></div>
+            <div id="rozpPracovniciEmpty" class="text-muted" style="padding: var(--sp-md); text-align: center;">
+              Žiadni pracovníci.
+            </div>
+          </div>
+
+          <!-- Povinnosti -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Povinnosti</div>
+            </div>
+            <div style="display: grid; gap: var(--sp-md);">
+              <div style="padding: var(--sp-md); background: rgba(0, 212, 255, 0.1); border-radius: var(--radius-sm);">
+                <div style="font-size: 13px; font-weight: 500;">Zameranie budov (Košice)</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Tomáš + Marko (8h)</div>
+              </div>
+              <div style="padding: var(--sp-md); background: rgba(255, 122, 48, 0.1); border-radius: var(--radius-sm);">
+                <div style="font-size: 13px; font-weight: 500;">Montáž izolácie (Banská Bystrica)</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Peter + Ján + Miroslav (24h)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========== AI ASISTENT ========== -->
+  <div class="ai-assistant">
+    <div class="ai-header">
+      <h3>🤖 AI Asistent</h3>
+      <button style="background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 16px;">−</button>
+    </div>
+    <div class="ai-messages">
+      <div class="ai-message assistant">Ahoj! Som tvoj AI asistent. Ako ťa môžem pomôcť?</div>
+    </div>
+    <div class="ai-input-group">
+      <input type="text" placeholder="Napíš otázku..." id="aiInput">
+      <button class="btn btn-primary" id="aiSendBtn">→</button>
+    </div>
+  </div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script>
+    // ========== FIREBASE CONFIG & INIT ==========
+    const CLAUDE_PROXY_URL = "https://matus.pf-izolacie.workers.dev";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEyYP-vvTMxjI6V_h2kCWYkqIv_BelZdI",
+      authDomain: "izol-lm.firebaseapp.com",
+      projectId: "izol-lm",
+      storageBucket: "izol-lm.firebasestorage.app",
+      messagingSenderId: "1071187272981",
+      appId: "1:1071187272981:web:a4a3b443a79f196745751c",
+      measurementId: "G-MN1SMFYP76"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const _db = firebase.firestore();
+    const _auth = firebase.auth();
+    let _fbUid = null;
+
+    // window.storage API (get/set/delete/list) - Firestore backed
+    function _docRef(key, shared){
+      return shared ? _db.collection('shared').doc(key) : _db.collection('personal_'+_fbUid).doc(key);
+    }
+    
+    window.storage = {
+      async get(key, shared){
+        const snap = await _docRef(key, shared).get();
+        if(!snap.exists) return null;
+        return { key, value: snap.data().value, shared: !!shared };
+      },
+      async set(key, value, shared){
+        await _docRef(key, shared).set({ value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        return { key, value, shared: !!shared };
+      },
+      async delete(key, shared){
+        await _docRef(key, shared).delete();
+        return { key, deleted: true, shared: !!shared };
+      },
+      async list(prefix, shared){
+        const col = shared ? _db.collection('shared') : _db.collection('personal_'+_fbUid);
+        let q = col;
+        if(prefix){
+          const fp = firebase.firestore.FieldPath.documentId();
+          q = q.where(fp, '>=', prefix).where(fp, '<', prefix + '\uf8ff');
+        }
+        const snap = await q.get();
+        return { keys: snap.docs.map(d=>d.id), prefix, shared: !!shared };
+      }
+    };
+
+    // ========== INITIALIZATION ==========
+    const $ = id => document.getElementById(id);
+
+    // ========== GLOBAL DATA VARIABLES ==========
+    let workers = [];
+    let projects = [];
+    let stavbyNaStavbe = [];
+    let matOdhad = [], matDodaci = [], matOdber = [], matSpotreba = [];
+    let zamerania = [];
+    let currentMatStavba = null;
+    let stavbyLoaded = false;
+    let workersLoaded = false;
+
+    // ========== LOAD DATA FUNCTIONS ==========
+    async function loadWorkers(){
+      try{
+        const r = await window.storage.get('workers', true);
+        workers = r ? JSON.parse(r.value) : [];
+      }catch(e){ workers = []; console.error('loadWorkers:', e); }
+      workersLoaded = true;
+    }
+
+    async function loadStavby(){
+      try{
+        const r = await window.storage.get('mat-stavby', true);
+        stavbyNaStavbe = r ? JSON.parse(r.value) : [];
+        if(stavbyNaStavbe.length > 0 && !currentMatStavba){
+          currentMatStavba = stavbyNaStavbe[0];
+        }
+      }catch(e){ stavbyNaStavbe = []; console.error('loadStavby:', e); }
+      stavbyLoaded = true;
+    }
+
+    async function loadMatData(){
+      if(!currentMatStavba) return;
+      try{
+        const [odhad, dodaci, odber, spotreba] = await Promise.all([
+          window.storage.get(`mat-odhad:${currentMatStavba}`, true),
+          window.storage.get(`mat-dodaci:${currentMatStavba}`, true),
+          window.storage.get(`mat-odber:${currentMatStavba}`, true),
+          window.storage.get(`mat-spotreba:${currentMatStavba}`, true),
+        ]);
+        matOdhad = odhad ? JSON.parse(odhad.value) : [];
+        matDodaci = dodaci ? JSON.parse(dodaci.value) : [];
+        matOdber = odber ? JSON.parse(odber.value) : [];
+        matSpotreba = spotreba ? JSON.parse(spotreba.value) : [];
+      }catch(e){ console.error('loadMatData:', e); }
+    }
+
+    async function loadZamerania(){
+      try{
+        const r = await window.storage.get('zamerania', true);
+        zamerania = r ? JSON.parse(r.value) : [];
+      }catch(e){ zamerania = []; console.error('loadZamerania:', e); }
+      renderZameranieTab();
+    }
+
+    async function initializeApp(){
+      // Prihlasovanie - ak je prihlásený, načítaj dáta
+      _auth.onAuthStateChanged(async (user) => {
+        if(user){
+          _fbUid = user.uid;
+          $('userName').textContent = user.email.split('@')[0] || 'User';
+          
+          // Načítaj všetky dáta
+          await loadWorkers();
+          await loadStavby();
+          if(currentMatStavba) await loadMatData();
+          await loadZamerania();
+          
+          updateDashboard();
+        }else{
+          // Nie si prihlásený - login screen
+          // TODO: implementovať login screen
+          console.log('Nie si prihlásený');
+        }
+      });
+    }
+
+    function updateDashboard(){
+      // Aktualizuj kartičky s dátami
+      updateMaterialCard();
+      updateSpotrebaCard();
+      updateRozpisCard();
+      updateVozidlaCard();
+      
+      // Aktualizuj Material tab
+      renderStavbySelect();
+      if(currentMatStavba) renderPrehledTab();
+      
+      // Aktualizuj Rozpisy tab
+      renderRozpisyTab();
+      
+      // Aktualizuj Zameranie tab
+      renderZameranieTab();
+    }
+
+    function updateMaterialCard(){
+      // Vypočítaj dostupný materiál (príjem - vidaj - spotreba)
+      let totalDodane = 0, totalOdobrate = 0, totalSpotrebovane = 0;
+      
+      matDodaci.forEach(batch => {
+        if(batch.items) batch.items.forEach(item => {
+          totalDodane += parseFloat(item.mnozstvo || 0);
+        });
+      });
+      
+      matOdber.forEach(item => {
+        totalOdobrate += parseFloat(item.mnozstvo || 0);
+      });
+      
+      matSpotreba.forEach(item => {
+        totalSpotrebovane += parseFloat(item.mnozstvo || 0);
+      });
+      
+      const dostupne = totalDodane - totalOdobrate;
+      const procent = totalDodane > 0 ? Math.round((dostupne / totalDodane) * 100) : 0;
+      
+      // Aktualizuj UI
+      const cards = document.querySelectorAll('.card');
+      if(cards[0]){
+        cards[0].querySelector('.card-value').textContent = procent + '%';
+        
+        // Aktualizuj SVG progress circle
+        const circle = cards[0].querySelector('circle:nth-of-type(2)');
+        const dasharray = 2 * Math.PI * 60; // circumference (r=60)
+        const offset = dasharray * (1 - procent / 100);
+        if(circle) circle.setAttribute('stroke-dashoffset', offset);
+      }
+    }
+
+    function updateSpotrebaCard(){
+      // Sumuj spotrebu za tento týždeň
+      let tyzdenovaSpotrebaTM = 0;
+      const dnesCas = new Date();
+      const pondelokCas = new Date(dnesCas);
+      pondelokCas.setDate(dnesCas.getDate() - dnesCas.getDay() + 1);
+      
+      matSpotreba.forEach(item => {
+        if(item.ts){
+          const itemDate = new Date(item.ts);
+          if(itemDate >= pondelokCas && itemDate <= dnesCas){
+            tyzdenovaSpotrebaTM += parseFloat(item.mnozstvo || 0);
+          }
+        }
+      });
+      
+      const cards = document.querySelectorAll('.card');
+      if(cards[1]){
+        cards[1].querySelector('.card-value').textContent = Math.round(tyzdenovaSpotrebaTM) + ' m²';
+      }
+    }
+
+    function updateRozpisCard(){
+      // Sumuj odpracované hodiny za týždeň
+      // TODO: integrácia s rozpismi
+      const cards = document.querySelectorAll('.card');
+      if(cards[2]){
+        // Placeholder kým nie je rozpisy integrácia
+        cards[2].querySelector('.card-value').textContent = '42 h';
+      }
+    }
+
+    function updateVozidlaCard(){
+      // Vozidlá status - placeholder (z existujúcej appky)
+      // TODO: integráciaс vozidlami
+    }
+    
+    // Update header time and date
+    function updateDateTime() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const day = now.toLocaleDateString('en-US', { weekday: 'long' });
+      
+      $('headerTime').textContent = time;
+      $('headerDate').textContent = date;
+    }
+    
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    // ========== NAVIGATION ==========
+    const navItems = [
+      { el: $('nav-dashboard'), view: 'dashboard-view' },
+      { el: $('nav-material'), view: 'material-view' },
+      { el: $('nav-rozpisy'), view: 'rozpisy-view' },
+      { el: $('nav-zameranie'), view: 'zameranie-view' },
+    ];
+
+    navItems.forEach(({ el, view }) => {
+      el.addEventListener('click', () => {
+        // Update active nav
+        document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+        el.classList.add('active');
+        
+        // Update active view
+        document.querySelectorAll('[id$="-view"]').forEach(v => v.classList.add('hidden'));
+        $(view).classList.remove('hidden');
+      });
+    });
+
+    // ========== AI ASISTENT ==========
+    const aiMessagesEl = document.querySelector('.ai-messages');
+    const aiInput = $('aiInput');
+    const aiSendBtn = $('aiSendBtn');
+
+    aiSendBtn.addEventListener('click', () => {
+      const message = aiInput.value.trim();
+      if (!message) return;
+      
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'ai-message user';
+      userMsg.textContent = message;
+      aiMessagesEl.appendChild(userMsg);
+      
+      aiInput.value = '';
+      aiMessagesEl.scrollTop = aiMessagesEl.scrollHeight;
+      
+      // Simulate AI response (placeholder)
+      setTimeout(() => {
+        const assistantMsg = document.createElement('div');
+        assistantMsg.className = 'ai-message assistant';
+        assistantMsg.textContent = 'Rozumiem. Pracujem na tom... 🔧';
+        aiMessagesEl.appendChild(assistantMsg);
+        aiMessagesEl.scrollTop = aiMessagesEl.scrollHeight;
+      }, 500);
+    });
+
+    aiInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') aiSendBtn.click();
+    });
+
+    // ========== MATERIAL TAB HANDLERS ==========
+    function renderStavbySelect() {
+      const select = $('stavbySelect');
+      select.innerHTML = '<option value="">-- Vyber stavbu --</option>';
+      stavbyNaStavbe.forEach(stavba => {
+        const opt = document.createElement('option');
+        opt.value = stavba;
+        opt.textContent = stavba;
+        select.appendChild(opt);
+      });
+      if(currentMatStavba) select.value = currentMatStavba;
+    }
+
+    $('stavbySelect').addEventListener('change', async (e) => {
+      currentMatStavba = e.target.value || null;
+      if(currentMatStavba) {
+        await loadMatData();
+        renderPrehledTab();
+      }
+    });
+
+    $('newStavbaBtn').addEventListener('click', async () => {
+      const stavbaName = prompt('Názov novej stavby:');
+      if(!stavbaName) return;
+      
+      stavbyNaStavbe.push(stavbaName);
+      await window.storage.set('mat-stavby', JSON.stringify(stavbyNaStavbe), true);
+      currentMatStavba = stavbaName;
+      await loadMatData();
+      
+      renderStavbySelect();
+      renderPrehledTab();
+      showToast('Stavba vytvorená: ' + stavbaName);
+    });
+
+    // Material tabs switching
+    document.querySelectorAll('#materialTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Deactivate all tabs
+        document.querySelectorAll('#materialTabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.material-tab-content').forEach(t => t.classList.add('hidden'));
+        
+        // Activate clicked tab
+        btn.classList.add('active');
+        const tabId = btn.dataset.tab;
+        $(tabId).classList.remove('hidden');
+      });
+    });
+
+    function renderPrehledTab() {
+      if(!currentMatStavba) return;
+      
+      // Vypočítaj sumy
+      let totalDodane = 0, totalOdobrate = 0, totalSpotrebovane = 0;
+      const rozpis = {};
+      
+      matDodaci.forEach(batch => {
+        if(batch.items) batch.items.forEach(item => {
+          totalDodane += parseFloat(item.mnozstvo || 0);
+          const typ = item.kategoria || 'Ostatné';
+          if(!rozpis[typ]) rozpis[typ] = { dodane: 0, odobrate: 0, spotrebovane: 0 };
+          rozpis[typ].dodane += parseFloat(item.mnozstvo || 0);
+        });
+      });
+      
+      matOdber.forEach(item => {
+        totalOdobrate += parseFloat(item.mnozstvo || 0);
+        const typ = item.kategoria || 'Ostatné';
+        if(!rozpis[typ]) rozpis[typ] = { dodane: 0, odobrate: 0, spotrebovane: 0 };
+        rozpis[typ].odobrate += parseFloat(item.mnozstvo || 0);
+      });
+      
+      matSpotreba.forEach(item => {
+        totalSpotrebovane += parseFloat(item.mnozstvo || 0);
+        const typ = item.kategoria || 'Ostatné';
+        if(!rozpis[typ]) rozpis[typ] = { dodane: 0, odobrate: 0, spotrebovane: 0 };
+        rozpis[typ].spotrebovane += parseFloat(item.mnozstvo || 0);
+      });
+      
+      const dostupne = Math.max(0, totalDodane - totalOdobrate);
+      
+      // Aktualizuj UI
+      $('prehledStavba').textContent = currentMatStavba;
+      $('prehledDostupne').textContent = Math.round(dostupne);
+      $('prehledDodane').textContent = Math.round(totalDodane);
+      $('prehledOdobrate').textContent = Math.round(totalOdobrate);
+      $('prehledSpotrebovane').textContent = Math.round(totalSpotrebovane);
+      
+      // Rozpis podľa typu
+      const rozpisEl = $('prehledRozpis');
+      rozpisEl.innerHTML = '';
+      Object.entries(rozpis).forEach(([typ, data]) => {
+        const row = document.createElement('div');
+        row.className = 'flex-between';
+        row.style.paddingBottom = 'var(--sp-sm)';
+        row.style.borderBottom = '1px solid var(--card-border)';
+        row.innerHTML = `
+          <div style="font-size: 13px;">${typ}</div>
+          <div style="font-size: 12px; color: var(--text-tertiary);">
+            ${Math.round(data.dodane)} → ${Math.round(data.odobrate)} → ${Math.round(data.spotrebovane)}
+          </div>
+        `;
+        rozpisEl.appendChild(row);
+      });
+    }
+
+    $('exportPdfBtn').addEventListener('click', () => {
+      // Jednoduchý export - otvoriť print dialog s tabuľkou
+      const htmlTable = `
+        <html>
+        <head>
+          <title>Prehľad materiálu - ${currentMatStavba}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+            th { background: #f0f0f0; font-weight: bold; }
+            .warning { color: red; }
+          </style>
+        </head>
+        <body>
+          <h2>Prehľad materiálu - ${currentMatStavba}</h2>
+          <p>Dátum: ${new Date().toLocaleDateString('sk-SK')}</p>
+          <table>
+            <tr>
+              <th>Materiál</th>
+              <th>Doručené</th>
+              <th>Odobraté</th>
+              <th>Spotrebované</th>
+              <th>Zostatok</th>
+            </tr>
+            ${Object.entries({}).map(([mat, data]) => `
+              <tr>
+                <td>${mat}</td>
+                <td>${data.dodane || 0}</td>
+                <td>${data.odobrate || 0}</td>
+                <td>${data.spotrebovane || 0}</td>
+                <td>${Math.max(0, (data.dodane || 0) - (data.odobrate || 0))}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+        </html>
+      `;
+      const win = window.open('', '', 'height=600,width=800');
+      win.document.write(htmlTable);
+      win.document.close();
+      win.print();
+    });
+
+    // ========== ZAMERANIE TAB ==========
+    function renderZameranieTab(){
+      const listDiv = $('zameranieList');
+      const emptyDiv = $('zameranieEmpty');
+      
+      if(!zamerania || zamerania.length === 0){
+        emptyDiv.style.display = 'block';
+        listDiv.innerHTML = '';
+        return;
+      }
+      
+      emptyDiv.style.display = 'none';
+      listDiv.innerHTML = '';
+      
+      // Zobraz posledných 5 zameraní
+      const recent = zamerania.slice().reverse().slice(0, 5);
+      recent.forEach(z => {
+        const row = document.createElement('div');
+        row.style.padding = 'var(--sp-md)';
+        row.style.background = 'rgba(0, 212, 255, 0.1)';
+        row.style.borderRadius = 'var(--radius-sm)';
+        row.innerHTML = `
+          <div class="flex-between">
+            <div>
+              <div style="font-weight: 500;">${z.stavba}</div>
+              <div style="font-size: 12px; color: var(--text-tertiary);">Ø ${z.priemer}mm × ${z.hrubka}mm</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: 600; color: var(--primary-blue);">${z.dlzka} m</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">√${z.plocha.toFixed(0)} m²</div>
+            </div>
+          </div>
+        `;
+        listDiv.appendChild(row);
+      });
+    }
+
+    // Button handlers - Material formy
+    $('addMaterialBtn').addEventListener('click', () => {
+      openMaterialForm();
+    });
+
+    $('addPrijemBtn').addEventListener('click', () => {
+      openPrijemForm();
+    });
+
+    $('addSpotrebaBtn').addEventListener('click', () => {
+      openSpotrebaForm();
+    });
+
+    $('saveZameranieBtn').addEventListener('click', async () => {
+      const stavba = $('zameranieStavba').value.trim();
+      const priemer = parseFloat($('zamerianiePriemer').value || 0);
+      const hrubka = parseFloat($('zameranieHrubka').value || 0);
+      const dlzka = parseFloat($('zamerianieDlzka').value || 0);
+      
+      if(!stavba || priemer <= 0 || hrubka < 0 || dlzka <= 0){
+        showToast('Vyplň všetky povinné polia');
+        return;
+      }
+      
+      // Vypočítaj plochu izolácie: π × (d + 2h) × dlzka
+      const vonkajsiPriemer = priemer + 2 * hrubka;
+      const plocha = Math.PI * vonkajsiPriemer * dlzka / 1000; // v m²
+      
+      const zameranie = {
+        id: 'zam-' + Date.now(),
+        stavba,
+        priemer,
+        hrubka,
+        dlzka,
+        plocha: plocha,
+        ts: Date.now()
+      };
+      
+      zamerania.push(zameranie);
+      await window.storage.set('zamerania', JSON.stringify(zamerania), true);
+      
+      // Vyčisti formulár
+      $('zameranieStavba').value = '';
+      $('zamerianiePriemer').value = '';
+      $('zameranieHrubka').value = '';
+      $('zamerianieDlzka').value = '';
+      
+      showToast(`Zameranie uložené ✓ (${plocha.toFixed(0)} m²)`);
+      renderZameranieTab();
+    });
+
+    // ========== ROZPISY TAB ========== 
+    function renderRozpisyTab(){
+      // Calculus týždňa
+      const now = new Date();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - now.getDay() + 1);
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      
+      const mondayStr = monday.toLocaleDateString('sk-SK', { day: 'numeric', month: 'short' });
+      const fridayStr = friday.toLocaleDateString('sk-SK', { day: 'numeric', month: 'short', year: 'numeric' });
+      $('rozpTyzdenText').textContent = `${mondayStr} - ${fridayStr}`;
+      
+      // Renderuj pracovníkov
+      const pracovniciDiv = $('rozpPracovnici');
+      const emptyDiv = $('rozpPracovniciEmpty');
+      
+      if(workers && workers.length > 0){
+        emptyDiv.style.display = 'none';
+        pracovniciDiv.innerHTML = '';
+        workers.forEach(w => {
+          const row = document.createElement('div');
+          row.className = 'flex-between';
+          row.style.padding = 'var(--sp-md)';
+          row.style.background = 'rgba(0, 212, 255, 0.1)';
+          row.style.borderRadius = 'var(--radius-sm)';
+          row.innerHTML = `
+            <div>
+              <div style="font-size: 13px; font-weight: 500;">${w.name}</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">${w.role || 'Pracovník'}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; font-weight: 600; color: var(--primary-blue);">40 h</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">tento týždeň</div>
+            </div>
+          `;
+          pracovniciDiv.appendChild(row);
+        });
+      }else{
+        emptyDiv.style.display = 'block';
+        pracovniciDiv.innerHTML = '';
+      }
+    }
+
+    // ========== TOAST NOTIFICATIONS ==========
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ========== MATERIAL FORM HANDLERY ==========
+    function openMaterialForm(){
+      $('materialFormOverlay').style.display = 'flex';
+    }
+    function closeMaterialForm(){
+      $('materialFormOverlay').style.display = 'none';
+    }
+    async function saveMaterialForm(){
+      if(!currentMatStavba){
+        showToast('Vyber stavbu najprv');
+        return;
+      }
+      const material = {
+        id: 'mat-' + Date.now(),
+        kategoria: $('matFormCategoria').value,
+        priemer: $('matFormPriemer').value ? parseInt($('matFormPriemer').value) : null,
+        hrubka: $('matFormHrubka').value ? parseInt($('matFormHrubka').value) : null,
+        mnozstvo: parseFloat($('matFormMnozstvo').value || 0),
+        jednotka: $('matFormJednotka').value,
+        poznamka: $('matFormPoznamka').value,
+        ts: Date.now()
+      };
+      
+      matOdhad.push(material);
+      await window.storage.set(`mat-odhad:${currentMatStavba}`, JSON.stringify(matOdhad), true);
+      
+      showToast('Materiál pridaný ✓');
+      closeMaterialForm();
+      renderPrehledTab();
+    }
+
+    // ========== PRÍJEM FORM HANDLERY ==========
+    function openPrijemForm(){
+      $('prijemFormOverlay').style.display = 'flex';
+    }
+    function closePrijemForm(){
+      $('prijemFormOverlay').style.display = 'none';
+    }
+    async function savePrijemForm(){
+      if(!currentMatStavba){
+        showToast('Vyber stavbu najprv');
+        return;
+      }
+      try{
+        const polozky = JSON.parse($('prijemPolozky').value || '[]');
+        const prijem = {
+          id: 'prijem-' + Date.now(),
+          datum: $('prijemDatum').value,
+          dodavatel: $('prijemDodavatel').value,
+          faktura: $('prijemFaktura').value,
+          items: polozky,
+          ts: Date.now()
+        };
+        
+        matDodaci.push(prijem);
+        await window.storage.set(`mat-dodaci:${currentMatStavba}`, JSON.stringify(matDodaci), true);
+        
+        showToast('Príjem uložený ✓');
+        closePrijemForm();
+        renderPrehledTab();
+      }catch(e){
+        showToast('Chyba pri parsovaní JSON: ' + e.message);
+      }
+    }
+
+    // ========== VIDAJ FORM HANDLERY ==========
+    function openVidajForm(){
+      $('vidajFormOverlay').style.display = 'flex';
+    }
+    function closeVidajForm(){
+      $('vidajFormOverlay').style.display = 'none';
+    }
+    async function saveVidajForm(){
+      if(!currentMatStavba){
+        showToast('Vyber stavbu najprv');
+        return;
+      }
+      const vidaj = {
+        id: 'vidaj-' + Date.now(),
+        kategoria: $('vidajCategoria').value,
+        priemer: $('vidajPriemer').value ? parseInt($('vidajPriemer').value) : null,
+        hrubka: $('vidajHrubka').value ? parseInt($('vidajHrubka').value) : null,
+        mnozstvo: parseFloat($('vidajMnozstvo').value || 0),
+        jednotka: $('vidajJednotka').value,
+        datum: $('vidajDatum').value,
+        ts: Date.now()
+      };
+      
+      matOdber.push(vidaj);
+      await window.storage.set(`mat-odber:${currentMatStavba}`, JSON.stringify(matOdber), true);
+      
+      showToast('Vidaj zapísaný ✓');
+      closeVidajForm();
+      renderPrehledTab();
+    }
+
+    // ========== SPOTREBA FORM HANDLERY ==========
+    function openSpotrebaForm(){
+      // Naplň pracovníkov
+      const pracovnikSel = $('spotrebaPracovnik');
+      pracovnikSel.innerHTML = '<option value="">-- Vyber pracovníka --</option>';
+      workers.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.name;
+        opt.textContent = w.name;
+        pracovnikSel.appendChild(opt);
+      });
+      
+      // Naplň dostupný materiál
+      const materialSel = $('spotrebaMaterial');
+      materialSel.innerHTML = '<option value="">-- Žiadny dostupný materiál --</option>';
+      
+      let totalDodane = 0, totalOdobrate = 0;
+      matDodaci.forEach(batch => {
+        if(batch.items) batch.items.forEach(item => totalDodane += parseFloat(item.mnozstvo || 0));
+      });
+      matOdber.forEach(item => totalOdobrate += parseFloat(item.mnozstvo || 0));
+      
+      if(totalDodane - totalOdobrate > 0){
+        matOdber.forEach((item, idx) => {
+          const opt = document.createElement('option');
+          opt.value = JSON.stringify(item);
+          opt.textContent = `${item.kategoria || 'Iné'} ${item.priemer ? item.priemer+'mm' : ''} - ${item.mnozstvo}${item.jednotka}`;
+          materialSel.appendChild(opt);
+        });
+      }
+      
+      $('spotrebaFormOverlay').style.display = 'flex';
+    }
+    function closeSpotrebaForm(){
+      $('spotrebaFormOverlay').style.display = 'none';
+    }
+    async function saveSpotrebaForm(){
+      if(!currentMatStavba){
+        showToast('Vyber stavbu najprv');
+        return;
+      }
+      const matStr = $('spotrebaMaterial').value;
+      if(!matStr){
+        showToast('Vyber materiál');
+        return;
+      }
+      
+      const baseItem = JSON.parse(matStr);
+      const spotreba = {
+        id: 'spotreba-' + Date.now(),
+        ...baseItem,
+        pracovnik: $('spotrebaPracovnik').value,
+        mnozstvo: parseFloat($('spotrebaMnozstvo').value || 0),
+        datum: $('spotrebaDatum').value,
+        poznamka: $('spotrebaPoznamka').value,
+        ts: Date.now()
+      };
+      
+      matSpotreba.push(spotreba);
+      await window.storage.set(`mat-spotreba:${currentMatStavba}`, JSON.stringify(matSpotreba), true);
+      
+      showToast('Spotreba zapísaná ✓');
+      closeSpotrebaForm();
+      renderPrehledTab();
+    }
+
+    // Inicializuj appku
+    initializeApp();
+    console.log('✅ Izol L@M Dashboard initialized s Firebase');
+  </script>
+
+  <!-- ========== MODAL SHEETY NA FORMY ========== -->
+
+  <!-- PRIDAŤ MATERIÁL SHEET -->
+  <div class="overlay" id="materialFormOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(5px); z-index: 2000; padding: var(--sp-xl);">
+    <div class="sheet" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); max-width: 500px; margin: auto; max-height: 80vh; overflow-y: auto; padding: var(--sp-lg);">
+      <h2 style="color: var(--text-primary); margin-bottom: var(--sp-lg);">Pridať materiál</h2>
+      
+      <div style="display: grid; gap: var(--sp-md);">
+        <!-- Kategória -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Kategória:</label>
+          <select id="matFormCategoria" style="width: 100%;">
+            <option value="vata">🧶 Vata (minerálna)</option>
+            <option value="kaucuk">🧵 Kaučuk (Armaflex/K-Flex)</option>
+            <option value="spojovaci">🧷 Spoj (Lepidlo, pásky)</option>
+            <option value="plech">🛡️ Plech (iba pre Opleching)</option>
+          </select>
+        </div>
+
+        <!-- Priemer (pre rúry) -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Priemer rúry (mm) - voliteľný:</label>
+          <input type="number" id="matFormPriemer" placeholder="Napr. 89, 108, 133..." style="width: 100%;">
+        </div>
+
+        <!-- Hrúbka -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Hrúbka izolácie (mm) - voliteľný:</label>
+          <input type="number" id="matFormHrubka" placeholder="Napr. 25, 50, 100..." style="width: 100%;">
+        </div>
+
+        <!-- Množstvo -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Množstvo:</label>
+          <div style="display: flex; gap: var(--sp-sm);">
+            <input type="number" id="matFormMnozstvo" placeholder="123.5" style="flex: 1;" step="0.1">
+            <select id="matFormJednotka" style="width: 100px;">
+              <option value="m">m (bežný meter)</option>
+              <option value="m2">m² (štvorcový meter)</option>
+              <option value="kg">kg (kilogram)</option>
+              <option value="ks">ks (kusy)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Poznámka -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Poznámka:</label>
+          <textarea id="matFormPoznamka" placeholder="Napr. Modrá páska 50mm, značka Tesa..." style="width: 100%; height: 60px; resize: none;"></textarea>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: var(--sp-md); margin-top: var(--sp-lg);">
+        <button class="btn btn-ghost" style="flex: 1;" onclick="closeMaterialForm()">Zrušiť</button>
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMaterialForm()">✓ Uložiť</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRÍJEM (DODACÍ LIST) SHEET -->
+  <div class="overlay" id="prijemFormOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(5px); z-index: 2000; padding: var(--sp-xl);">
+    <div class="sheet" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); max-width: 500px; margin: auto; max-height: 80vh; overflow-y: auto; padding: var(--sp-lg);">
+      <h2 style="color: var(--text-primary); margin-bottom: var(--sp-lg);">Príjem materiálu</h2>
+      
+      <div style="display: grid; gap: var(--sp-md);">
+        <!-- Dátum dodávky -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Dátum dodávky:</label>
+          <input type="date" id="prijemDatum" style="width: 100%;">
+        </div>
+
+        <!-- Dodávateľ -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Dodávateľ:</label>
+          <input type="text" id="prijemDodavatel" placeholder="Napr. Isover, Armacell..." style="width: 100%;">
+        </div>
+
+        <!-- Faktúra číslo -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Číslo faktúry:</label>
+          <input type="text" id="prijemFaktura" placeholder="Napr. INV-2025-1234" style="width: 100%;">
+        </div>
+
+        <!-- Položky -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Položky (JSON):</label>
+          <textarea id="prijemPolozky" placeholder='[{"kategoria":"vata","mnozstvo":500,"jednotka":"m"}]' style="width: 100%; height: 80px; resize: none; font-family: monospace; font-size: 11px;"></textarea>
+          <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Príklad: [{"kategoria":"vata","mnozstvo":500,"jednotka":"m"}]</div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: var(--sp-md); margin-top: var(--sp-lg);">
+        <button class="btn btn-ghost" style="flex: 1;" onclick="closePrijemForm()">Zrušiť</button>
+        <button class="btn btn-primary" style="flex: 1;" onclick="savePrijemForm()">✓ Uložiť príjem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDAJ (NA STAVBE) SHEET -->
+  <div class="overlay" id="vidajFormOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(5px); z-index: 2000; padding: var(--sp-xl);">
+    <div class="sheet" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); max-width: 500px; margin: auto; max-height: 80vh; overflow-y: auto; padding: var(--sp-lg);">
+      <h2 style="color: var(--text-primary); margin-bottom: var(--sp-lg);">Vidaj - Odobraté zo skladu</h2>
+      
+      <div style="display: grid; gap: var(--sp-md);">
+        <!-- Kategória -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Kategória:</label>
+          <select id="vidajCategoria" style="width: 100%;">
+            <option value="vata">🧶 Vata</option>
+            <option value="kaucuk">🧵 Kaučuk</option>
+            <option value="spojovaci">🧷 Spoj</option>
+          </select>
+        </div>
+
+        <!-- Priemer -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Priemer (mm):</label>
+          <input type="number" id="vidajPriemer" placeholder="89" style="width: 100%;">
+        </div>
+
+        <!-- Hrúbka -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Hrúbka (mm):</label>
+          <input type="number" id="vidajHrubka" placeholder="50" style="width: 100%;">
+        </div>
+
+        <!-- Množstvo -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Množstvo:</label>
+          <div style="display: flex; gap: var(--sp-sm);">
+            <input type="number" id="vidajMnozstvo" placeholder="50" style="flex: 1;" step="0.1">
+            <select id="vidajJednotka" style="width: 100px;">
+              <option value="m">m</option>
+              <option value="m2">m²</option>
+              <option value="kg">kg</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dátum -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Dátum vidaja:</label>
+          <input type="date" id="vidajDatum" style="width: 100%;">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: var(--sp-md); margin-top: var(--sp-lg);">
+        <button class="btn btn-ghost" style="flex: 1;" onclick="closeVidajForm()">Zrušiť</button>
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveVidajForm()">✓ Zapísať vidaj</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOTREBA SHEET -->
+  <div class="overlay" id="spotrebaFormOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(5px); z-index: 2000; padding: var(--sp-xl);">
+    <div class="sheet" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); max-width: 500px; margin: auto; max-height: 80vh; overflow-y: auto; padding: var(--sp-lg);">
+      <h2 style="color: var(--text-primary); margin-bottom: var(--sp-lg);">Zapísať spotrebu</h2>
+      
+      <div style="display: grid; gap: var(--sp-md);">
+        <!-- Pracovník -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Pracovník:</label>
+          <select id="spotrebaPracovnik" style="width: 100%;">
+            <option value="">-- Vyber pracovníka --</option>
+          </select>
+        </div>
+
+        <!-- Dostupný materiál (dynamicky) -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Materiál (z dostupného):</label>
+          <select id="spotrebaMaterial" style="width: 100%;">
+            <option value="">-- Žiadny dostupný materiál --</option>
+          </select>
+        </div>
+
+        <!-- Množstvo -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Množstvo:</label>
+          <input type="number" id="spotrebaMnozstvo" placeholder="50" style="width: 100%;" step="0.1">
+        </div>
+
+        <!-- Dátum -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Dátum spotreby:</label>
+          <input type="date" id="spotrebaDatum" style="width: 100%;">
+        </div>
+
+        <!-- Poznámka -->
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 6px; font-size: 12px;">Poznámka:</label>
+          <textarea id="spotrebaPoznamka" placeholder="Napr. Izolácia trubice 89, východná stena..." style="width: 100%; height: 60px; resize: none;"></textarea>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: var(--sp-md); margin-top: var(--sp-lg);">
+        <button class="btn btn-ghost" style="flex: 1;" onclick="closeSpotrebaForm()">Zrušiť</button>
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveSpotrebaForm()">✓ Uložiť spotrebu</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
