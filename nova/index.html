@@ -325,6 +325,8 @@
     background:rgba(10,14,39,.5); border:1px solid var(--line); border-radius:9px;
     min-height:100px; padding:7px; display:flex; flex-direction:column; gap:4px;
     cursor:pointer; transition:border-color .15s, background .15s;
+    /* Dlhý názov sviatku inak vytečie cez susedné dni. */
+    overflow:hidden;
   }
   .cal-day:hover{ background:rgba(0,212,255,.07); border-color:var(--line-2); }
   .cal-day.other-month{ opacity:.35; }
@@ -335,6 +337,58 @@
     display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
   }
   .cal-day.filled{ border-left:3px solid var(--steel); }
+
+  /* ---- Zákazky ---- */
+  .zak-filter{ display:flex; gap:6px; margin:0 16px 10px; flex-wrap:wrap; }
+  .zak-filter button{
+    flex:1 1 auto; background:var(--card); border:1px solid var(--line); color:var(--muted);
+    border-radius:9px; padding:9px 10px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .zak-filter button.active{ background:var(--steel); border-color:var(--steel); color:#04220f; }
+  .zakazka-karta{
+    background:rgba(10,14,39,.5); border:1px solid var(--line); border-radius:11px;
+    padding:13px 15px; margin:0 16px 9px; cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .zakazka-karta:hover{ border-color:var(--line-2); background:rgba(0,212,255,.06); }
+  .zakazka-karta.pc-active{ border-color:var(--steel); background:rgba(0,212,255,.10); }
+  .zakazka-karta.dokoncena{ opacity:.55; }
+  .zk-hlava{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .zk-nazov{ font-size:15px; font-weight:800; color:#fff; }
+  .zk-stav{
+    font-size:10px; font-weight:800; letter-spacing:.04em; padding:3px 8px; border-radius:20px;
+    background:rgba(0,217,142,.12); color:var(--ok); border:1px solid rgba(0,217,142,.35); white-space:nowrap;
+  }
+  .zk-stav.pozastavena{ background:rgba(255,193,7,.12); color:var(--warn); border-color:rgba(255,193,7,.35); }
+  .zk-stav.dokoncena{ background:rgba(255,255,255,.05); color:var(--muted); border-color:var(--line); }
+  .zk-riadok{ font-size:12px; color:var(--muted); margin-top:5px; line-height:1.5; }
+  .zk-riadok b{ color:var(--ink); font-weight:700; }
+  .zk-tel{
+    display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+    background:rgba(0,212,255,.10); border:1px solid var(--line); color:var(--steel-dk);
+    border-radius:8px; padding:6px 11px; font-size:12.5px; font-weight:700; text-decoration:none;
+  }
+  /* Súhrn odpracovaného - podklad pri reklamácii, preto je vidieť aj v archíve. */
+  .zak-suhrn{
+    margin-top:14px; padding:11px 14px; border-radius:10px;
+    background:rgba(0,212,255,.06); border:1px solid var(--line); font-size:12.5px; line-height:1.6; color:var(--muted);
+  }
+  .zak-suhrn b{ color:var(--ink); }
+  .zak-suhrn .zs-nadpis{ font-size:11px; font-weight:800; letter-spacing:.05em; color:var(--steel-dk); margin-bottom:5px; }
+
+  .zak-ludia{ display:flex; flex-wrap:wrap; gap:5px; }
+  .zak-ludia .zl-chip{
+    display:inline-flex; align-items:center; gap:6px; background:rgba(0,212,255,.10);
+    border:1px solid var(--line); border-radius:20px; padding:5px 10px; font-size:12px; color:var(--ink);
+  }
+  .zak-ludia .zl-chip button{ background:none; border:none; color:#ff8a65; cursor:pointer; font-size:14px; padding:0 2px; }
+  .zak-ludia .zl-prazdne{ font-size:12px; color:var(--muted); }
+  .o-kontakt{
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;
+    background:rgba(10,14,39,.4);
+  }
+  .o-kontakt .ok-hlava{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .o-kontakt .ok-zmaz{ background:none; border:none; color:#ff8a65; cursor:pointer; font-size:15px; }
 
   /* ================= TÍM ================= */
   .worker-list{ display:flex; flex-direction:column; gap:8px; }
@@ -491,6 +545,14 @@
   .zc-dni span:hover{ outline-color:var(--steel); }
   .zak-clovek .zc-meno{ cursor:pointer; }
   .zak-clovek .zc-meno:hover{ color:var(--steel-dk); text-decoration:underline; }
+  .zak-akcie{ display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
+  .zak-akcie > button{ flex:1 1 140px; margin-top:0; }
+  .zak-upravit{
+    background:rgba(0,212,255,.07); border:1px dashed var(--line-2); color:var(--steel);
+    border-radius:9px; padding:9px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .zak-upravit:hover{ background:rgba(0,212,255,.15); color:var(--steel-dk); }
+  #rozpisZmazatBtn{ color:#ff8a65 !important; border-color:rgba(255,87,34,.35) !important; }
   .zak-pridaj{
     margin-top:9px; width:100%; background:rgba(0,212,255,.07); border:1px dashed var(--line-2);
     color:var(--steel); border-radius:9px; padding:9px 12px; font-size:12px; font-weight:700; cursor:pointer;
@@ -944,6 +1006,19 @@
     outline:2px solid var(--steel); outline-offset:2px;
   }
 
+  /* Kontrola rozpisu: každý nález má vedľa seba svoju opravu. */
+  .kontrola-riadok{ flex-wrap:wrap; }
+  .kontrola-riadok .kr-text{ flex:1; min-width:0; }
+  .kr-oprav{
+    flex:0 0 auto; background:var(--steel); border:none; color:#04220f;
+    border-radius:8px; padding:8px 13px; font-size:12px; font-weight:800; cursor:pointer;
+  }
+  .kr-oprav:hover{ background:var(--steel-dk); }
+  .kr-oprav:disabled{ opacity:.5; cursor:default; }
+  @media (max-width:700px){
+    .kr-oprav{ width:100%; margin-top:8px; min-height:42px; }
+  }
+
   #fdTip{
     position:fixed; z-index:1400; pointer-events:none; opacity:0; transition:opacity .12s;
     background:#0a1020; border:1px solid var(--line-2); border-radius:8px;
@@ -1178,6 +1253,22 @@
     .md-split.cely-tim > .md-detail{ display:block !important; }
     .md-split.cely-tim .md-spat{ display:none !important; }
 
+    /* Mesačný kalendár: sedem stĺpcov na 375 px znamená ~45 px na deň.
+       Bunka preto musí byť nižšia a písmo menšie, nech sa do nej text zmestí. */
+    .cal-grid{ gap:3px; }
+    .cal-dow{ font-size:9.5px; letter-spacing:0; padding:2px 0; }
+    .cal-day{ min-height:54px; padding:4px 3px; gap:2px; border-radius:7px; }
+    .cal-day .dnum{ font-size:11px; text-align:center; }
+    .cal-day .label{
+      font-size:9px; padding:2px 3px; line-height:1.2; border-radius:4px;
+      -webkit-line-clamp:2; word-break:break-word;
+    }
+    .cal-day .sviatok-nazov{
+      font-size:8px; line-height:1.15; overflow:hidden;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    }
+    .cal-day.filled{ border-left-width:2px; }
+
     /* Mriežka 45×7 sa na telefóne nedá prečítať - namiesto nej zoznam po dňoch. */
     .tim-obal{ display:none; }
     .tim-dni{ display:block; }
@@ -1220,6 +1311,7 @@
     <div class="sidebar-icon" data-tab="home"><span class="si-ic">⌂</span><span class="si-label">Domov</span></div>
 
     <div class="sidebar-sep">Práca</div>
+    <div class="sidebar-icon" data-tab="zakazky"><span class="si-ic">🏗️</span><span class="si-label">Zákazky</span></div>
     <div class="sidebar-icon" data-tab="kalendar"><span class="si-ic">📅</span><span class="si-label">Kalendár</span></div>
     <div class="sidebar-icon" data-tab="rozpis"><span class="si-ic">📋</span><span class="si-label">Rozpis</span></div>
     <div class="sidebar-icon" data-tab="zameranie"><span class="si-ic">📐</span><span class="si-label">Zameranie</span></div>
@@ -1672,6 +1764,7 @@
     <div class="rozpis-nastroje">
         <button id="rozpisPrevzatBtn">📋 Prevziať minulý týždeň</button>
         <button id="rozpisKontrolaBtn">🔍 Skontrolovať rozpis</button>
+        <button id="rozpisZmazatBtn">🗑 Zmazať celý týždeň</button>
         <button id="rozpisTlacBtn">🖨 Vytlačiť rozpis</button>
       </div>
     <div id="rozpisList"></div>
@@ -1798,6 +1891,24 @@
     <div class="footer-actions" id="pSaveWrap">
       <button class="btn-export" id="pSaveBtn" style="border-color:var(#00d4ff); color:var(#00d4ff-dk);">Uložiť profil</button>
     </div>
+  </div>
+
+  <!-- ---- TAB: ZÁKAZKY ---- -->
+  <div class="tab" id="tab-zakazky">
+    <div class="section-label">Zákazky</div>
+    <div class="zak-filter" id="zakFilter">
+      <button data-stav="aktivna" class="active">Aktívne</button>
+      <button data-stav="pozastavena">Pozastavené</button>
+      <button data-stav="dokoncena">Dokončené</button>
+      <button data-stav="vsetky">Všetky</button>
+    </div>
+    <button class="new-car-btn" id="newZakazkaBtn">+ Nová zákazka</button>
+    <div id="zakazkaList"></div>
+    <div class="empty" id="zakazkaEmpty" style="display:none;">V tomto stave nie je žiadna zákazka.</div>
+    <button class="new-car-btn" id="zakazkyZRozpisuBtn"
+      style="background:var(--card); color:var(--steel); border:1px solid var(--line) !important; margin-top:12px;">
+      🔎 Založiť zákazky z rozpisu a zamerania
+    </button>
   </div>
 
   <!-- ---- TAB: AUTÁ ---- -->
@@ -2052,7 +2163,7 @@
         <div class="yn-opt" data-val="pn">PN / choroba</div>
         <div class="yn-opt" data-val="volno">Náhradné voľno</div>
       </div>
-      <input type="text" id="sZakazka" list="sZakazkaMoznosti" placeholder="napr. Aku Bratislava, Dielňa...">
+      <input type="text" id="sZakazka" readonly placeholder="klepni a vyber zákazku" style="cursor:pointer;">
       <datalist id="sZakazkaMoznosti"></datalist>
       <div id="sZakazkaVariant" class="nazov-variant" style="display:none;"></div>
     </div>
@@ -2284,6 +2395,94 @@
 </div>
 
 <!-- ============ SHEET: AUTO ============ -->
+<div class="overlay" id="zakKartaOverlay">
+  <div class="sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <h2 id="zakazkaSheetTitle">Zákazka</h2>
+    <div class="field">
+      <label>Názov zákazky</label>
+      <input type="text" id="zNazov" placeholder="napr. PRAHA">
+      <div class="hint" id="zNazovHint">Presne tento názov sa bude používať v Rozpise, Kalendári aj v Zameraní.</div>
+    </div>
+    <div class="field">
+      <label>Pre koho robíme (odberateľ)</label>
+      <div class="auto-riadok">
+        <select id="zOdberatel"></select>
+        <button type="button" class="auto-pridaj" id="zNovyOdberatel">＋ firma</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Mesto</label><input type="text" id="zMesto" placeholder="napr. Praha"></div>
+      <div class="field"><label>Stav</label>
+        <select id="zStav">
+          <option value="aktivna">Aktívna</option>
+          <option value="pozastavena">Pozastavená</option>
+          <option value="dokoncena">Dokončená</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Adresa stavby</label><input type="text" id="zAdresa" placeholder="voliteľné"></div>
+
+    <div class="section-label" style="margin:14px 0 8px; padding:0;">Kontakt priamo na stavbe</div>
+    <div class="row2">
+      <div class="field"><label>Meno</label><input type="text" id="zKontaktMeno" placeholder="napr. Ing. Novák"></div>
+      <div class="field"><label>Funkcia</label><input type="text" id="zKontaktFunkcia" placeholder="napr. stavbyvedúci"></div>
+    </div>
+    <div class="field"><label>Telefón</label><input type="tel" id="zKontaktTelefon" placeholder="+421…"></div>
+
+    <div class="section-label" style="margin:14px 0 8px; padding:0;">Predvolené obsadenie</div>
+    <div class="field">
+      <label>Auto</label>
+      <div class="auto-riadok">
+        <input type="text" id="zAuto" placeholder="vyber zo zoznamu áut">
+        <button type="button" class="auto-pridaj" id="zAutoPick">＋ auto</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Ľudia, ktorí na nej bežne robia</label>
+      <div class="zak-ludia" id="zLudia"></div>
+      <button type="button" class="zak-pridaj" id="zPridajCloveka">＋ pridať človeka</button>
+    </div>
+
+    <div class="field"><label>Poznámka</label><textarea id="zPoznamka" placeholder="čo treba vedieť o tejto stavbe"></textarea></div>
+
+    <div id="zSuhrn" class="zak-suhrn" style="display:none;"></div>
+    <div id="zPrepojenia" class="zak-suhrn" style="display:none;"></div>
+
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="zakazkaCancel" style="flex:1;">Zrušiť</button>
+      <button class="btn-save" id="zakazkaSave" style="flex:2;">Uložiť</button>
+    </div>
+    <button class="btn-delete" id="zakazkaDelete" style="display:none;">Zmazať zákazku</button>
+  </div>
+</div>
+
+<!-- ---- SHEET: ODBERATEĽ (firma, pre ktorú robíme) ---- -->
+<div class="overlay" id="odberatelOverlay">
+  <div class="sheet" style="max-height:92vh;">
+    <div class="sheet-handle"></div>
+    <h2 id="odberatelSheetTitle">Odberateľ</h2>
+    <div class="field"><label>Názov firmy</label><input type="text" id="oNazov" placeholder="napr. KOVOMK s.r.o."></div>
+    <div class="row2">
+      <div class="field"><label>IČO</label><input type="text" id="oIco" placeholder="voliteľné"></div>
+      <div class="field"><label>Mesto</label><input type="text" id="oMesto" placeholder="voliteľné"></div>
+    </div>
+    <div class="field"><label>Adresa</label><input type="text" id="oAdresa" placeholder="voliteľné"></div>
+
+    <div class="section-label" style="margin:14px 0 8px; padding:0;">Kontaktné osoby</div>
+    <div id="oKontakty"></div>
+    <button type="button" class="zak-pridaj" id="oPridajKontakt">＋ pridať kontakt</button>
+
+    <div class="field" style="margin-top:12px;"><label>Poznámka</label><textarea id="oPoznamka" placeholder="voliteľné"></textarea></div>
+
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="odberatelCancel" style="flex:1;">Zrušiť</button>
+      <button class="btn-save" id="odberatelSave" style="flex:2;">Uložiť</button>
+    </div>
+    <button class="btn-delete" id="odberatelDelete" style="display:none;">Zmazať odberateľa</button>
+  </div>
+</div>
+
 <div class="overlay" id="carOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -2752,11 +2951,12 @@
     <div class="section-label" style="padding:10px 0 4px;">Prepojenie s ostatnými časťami appky</div>
     <div class="empty" style="padding:0 0 8px; text-align:left; color:var(--muted); font-size:12px;">
       Tá istá zákazka sa v appke vedie zvlášť v Materiáli a zvlášť v Rozpise. Tu jej povieš, čo k nej patrí,
-      aby sa dalo pozrieť všetko naraz.
+      aby sa dalo pozrieť všetko naraz. <b>Nič z toho nie je povinné</b> — zameranie pokojne existuje
+      aj bez zákazky v rozpise a materiál sa vedie aj tam, kde sa nič nemeria.
     </div>
     <div class="field"><label>Stavba v Materiáli</label><select id="zkStavba"></select></div>
     <div class="field"><label>Názov v Rozpise a Kalendári</label>
-      <input type="text" id="zkRozpis" list="zkRozpisMoznosti" placeholder="presne tak, ako ho píšeš do rozpisu">
+      <input type="text" id="zkRozpis" readonly placeholder="klepni a vyber — alebo nechaj prázdne" style="cursor:pointer;">
       <datalist id="zkRozpisMoznosti"></datalist>
     </div>
     <div class="sheet-actions">
@@ -3088,6 +3288,11 @@ async function loadShifts(){
 }
 
 async function saveShifts(){
+  // Doplní id tam, kde chýba. Nikdy neprepisuje existujúce - podľa nich sa
+  // zlučujú súbežné úpravy dvoch ľudí naraz.
+  (shifts||[]).forEach(z=>{
+    if(!z.id) z.id = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  });
   try{ await window.storage.set('shifts', JSON.stringify(shifts), true); }catch(e){ chybaUkladania('rozpis a kalendár', e); }
 }
 
@@ -3192,6 +3397,7 @@ $('logoutBtn').onclick = async ()=>{
 const HOME_TILES = [
   {tab:'firma', ic:'🏢', label:'Prehľad firmy', ownerOnly:true},
   {tab:'asistent', ic:'🎙️', label:'AI Asistent', ownerOnly:true},
+  {tab:'zakazky', ic:'🏗️', label:'Zákazky', permKeys:null},
   {tab:'kalendar', ic:'📅', label:'Kalendár', permKeys:null},
   {tab:'rozpis', ic:'📋', label:'Rozpis', permKeys:null},
   {tab:'zameranie', ic:'📐', label:'Zameranie', permKeys:['zameranie']},
@@ -3227,6 +3433,7 @@ function openTab(tabName){
   $('quickBar').style.display = 'flex';
   document.querySelectorAll('#quickBar button[data-tab]').forEach(b=> b.classList.toggle('active', b.dataset.tab===tabName));
 
+  if(tabName === 'zakazky') openZakazkyTab();
   if(tabName === 'profil') renderProfilTab();
   if(tabName === 'material') openMaterialTab();
   if(tabName === 'sklad') openSkladTab();
@@ -3406,6 +3613,17 @@ function popisDna(s){
   return t === 'praca' ? ((s.zakazka||'').trim()) : TYPY_DNA[t].skratka;
 }
 
+// Odstráni presne zadané zmeny a vráti, koľko ich naozaj ubudlo.
+// Zámerne nepoužíva iba id: záznam bez id by cez Set vyhodil všetky ostatné
+// záznamy bez id. Taký sa preto rieši dvojicou dátum+človek, ktorá je jedinečná.
+function odstranZmeny(naZmazanie){
+  const ids = new Set(naZmazanie.map(x=> x.id).filter(Boolean));
+  const kluce = new Set(naZmazanie.filter(x=> !x.id).map(x=> x.date + '|' + x.worker));
+  const predtym = shifts.length;
+  shifts = shifts.filter(x=> !(x.id ? ids.has(x.id) : kluce.has(x.date + '|' + x.worker)));
+  return predtym - shifts.length;
+}
+
 // ---------- Hromadné vyplnenie označených buniek ----------
 // Označené políčka si appka drží ako dáta ("dátum|človek"), nie ako triedy v tabuľke.
 // Na telefóne sa prepína deň a zoznam sa prekresľuje - inak by výber z iného dňa zmizol.
@@ -3473,25 +3691,27 @@ async function vyplnOznacene(){
 
   let zakazka = '', od = '07:00', doo = '15:00';
   if(typ === 'praca'){
-    const pouzite = nazvyVRozpise();
-    const vyber = pouzite.map(n=>({ hodnota:n, nazov:n, popis:'už sa používa v rozpise' }));
-    vyber.push({ hodnota:'__nova__', nazov:'➕ Iná zákazka…', popis:'zadáš názov ručne' });
-    const volba = await customPicker('Na ktorú zákazku?', vyber, 'Zatiaľ nie je v rozpise žiadna zákazka.');
+    const volba = await vyberZakazku('Na ktorú zákazku?');
     if(!volba) return;
-    if(volba === '__nova__'){
-      zakazka = (await customPrompt('Názov zákazky', '') || '').trim();
-      if(!zakazka) return;
-    } else zakazka = volba;
+    zakazka = volba;
 
-    // Prázdne = každý deň dostane svoj štandardný čas (pondelok je iný než piatok).
-    const cas = await customPrompt(
-      'Čas (od-do). Nechaj prázdne = štandardný čas podľa dňa\n' +
-      '(Po ' + CAS_SABLONA[1].from + '-' + CAS_SABLONA[1].to + ', Ut-Št ' + CAS_SABLONA[2].from + '-' + CAS_SABLONA[2].to +
-      ', Pi ' + CAS_SABLONA[5].from + '-' + CAS_SABLONA[5].to + ')', '');
-    if(cas === null) return;
-    const casti = String(cas).split('-');
-    if(casti.length === 2){ od = casti[0].trim(); doo = casti[1].trim(); }
-    else { od = ''; doo = ''; }   // prázdne -> šablóna sa doplní pri každom dni zvlášť
+    // Dve jasné možnosti namiesto písania. Prázdne textové pole sa tu nedá použiť -
+    // appka ho vyhodnocuje ako "zrušené" a vyplnenie by sa potichu zahodilo.
+    const volbaCasu = await customPicker('Aký čas zapísať?', [
+      { hodnota:'sablona', nazov:'Štandardný podľa dňa',
+        popis:'Po ' + CAS_SABLONA[1].from + '–' + CAS_SABLONA[1].to +
+              ' · Ut–Št ' + CAS_SABLONA[2].from + '–' + CAS_SABLONA[2].to +
+              ' · Pi ' + CAS_SABLONA[5].from + '–' + CAS_SABLONA[5].to },
+      { hodnota:'vlastny', nazov:'Zadať vlastný čas', popis:'rovnaký pre všetky označené dni' },
+    ]);
+    if(!volbaCasu) return;
+    if(volbaCasu === 'vlastny'){
+      const cas = await customPrompt('Čas (od-do)', CAS_SABLONA[2].from + '-' + CAS_SABLONA[2].to);
+      if(cas === null) return;
+      const casti = String(cas).split('-');
+      if(casti.length === 2){ od = casti[0].trim(); doo = casti[1].trim(); }
+      else { showToast('Čas som nerozpoznal — použijem štandardný'); od = ''; doo = ''; }
+    } else { od = ''; doo = ''; }   // šablóna sa doplní pri každom dni zvlášť
   }
 
   let zmenene = 0;
@@ -3860,6 +4080,8 @@ function podobnyNazovZakazky(text){
 function skontrolujNazovZakazky(){
   const pole = $('sZakazka');
   const box = $('sZakazkaVariant');
+  // Vybraná založená zákazka je vždy v poriadku - varianty vznikali len z ručného zápisu.
+  if(zakazkaPodlaNazvu(pole.value)){ box.style.display = 'none'; box.innerHTML = ''; return; }
   const podobny = podobnyNazovZakazky(pole.value);
   if(!podobny){ box.style.display = 'none'; box.innerHTML = ''; return; }
   box.style.display = 'block';
@@ -3873,12 +4095,14 @@ function openDaySheetUI(dateStr, existing){
   const sv = sviatokPre(dateStr);
   $('shiftDateTag').textContent = dateStr + ' — ' + calWorker + (sv ? '  ·  ' + sv.kde.join('+') + ' sviatok: ' + sv.nazov : '');
   nastavTypDna(existing ? typDna(existing) : 'praca');
-  // Našepkávanie už používaných názvov - hlavná obrana proti variantom tej istej zákazky.
-  const dl = $('sZakazkaMoznosti');
-  dl.innerHTML = '';
-  nazvyVRozpise().forEach(n=>{ const o=document.createElement('option'); o.value=n; dl.appendChild(o); });
-  $('sZakazka').value = existing ? existing.zakazka : '';
-  $('sZakazka').oninput = skontrolujNazovZakazky;
+  // Zákazka sa vyberá zo zoznamu - písaním rukou vznikali varianty tej istej stavby.
+  $('sZakazka').value = existing ? (existing.zakazka || '') : '';
+  $('sZakazka').onclick = async ()=>{
+    const volba = await vyberZakazku('Na ktorú zákazku?');
+    if(volba === null) return;
+    $('sZakazka').value = volba;
+    skontrolujNazovZakazky();
+  };
   skontrolujNazovZakazky();
   const stdCas = casPreDatum(dateStr);
   $('sFrom').value = (existing && existing.from) ? existing.from : stdCas.from;
@@ -3893,7 +4117,7 @@ $('shiftOverlay').addEventListener('click', e=>{ if(e.target.id==='shiftOverlay'
 
 $('shiftDelete').onclick = async ()=>{
   const existing = findEntry(openDayDate, calWorker);
-  if(existing){ shifts = shifts.filter(s=>s.id!==existing.id); await saveShifts(); }
+  if(existing){ odstranZmeny([existing]); await saveShifts(); }
   $('shiftOverlay').classList.remove('show');
   renderCalendar();
   renderRozpis();
@@ -4135,6 +4359,500 @@ $('cardTelefon').addEventListener('input', ()=>{
   if(v){ $('cardCallBtn').style.display = 'block'; $('cardCallBtn').href = 'tel:' + v.replace(/\s+/g,''); }
   else { $('cardCallBtn').style.display = 'none'; }
 });
+
+// ---------- ZÁKAZKY A ODBERATELIA ----------
+let zakazky = [];
+let odberatelia = [];
+let zakazkyLoaded = false;
+let zakFilterStav = 'aktivna';
+let openZakazkaId = null;
+let openOdberatelId = null;
+let rozrobeneLudia = [];      // ľudia v práve otvorenom formulári zákazky
+let rozrobeneKontakty = [];   // kontakty v práve otvorenom formulári odberateľa
+
+async function loadZakazky(){
+  try{
+    const r = await window.storage.get('zakazky', true);
+    zakazky = r ? JSON.parse(r.value) : [];
+  }catch(e){ zakazky = []; }
+  try{
+    const r2 = await window.storage.get('odberatelia', true);
+    odberatelia = r2 ? JSON.parse(r2.value) : [];
+  }catch(e){ odberatelia = []; }
+  zakazkyLoaded = true;
+}
+async function saveZakazky(){
+  try{ await window.storage.set('zakazky', JSON.stringify(zakazky), true); }
+  catch(e){ chybaUkladania('zákazky', e); }
+}
+async function saveOdberatelia(){
+  try{ await window.storage.set('odberatelia', JSON.stringify(odberatelia), true); }
+  catch(e){ chybaUkladania('odberateľov', e); }
+}
+
+function odberatelPodlaId(id){ return odberatelia.find(o=> o.id === id) || null; }
+
+// Spojenie so zvyškom appky ide cez názov - v zmenách je uložený text, nie id.
+// Preto porovnávame bez diakritiky a veľkosti písmen, nech "Praha" nájde "PRAHA".
+function zakazkaPodlaNazvu(nazov){
+  const h = bezDiakritiky(nazov);
+  if(!h) return null;
+  return zakazky.find(z=> bezDiakritiky(z.nazov) === h) || null;
+}
+// Názvy, ktoré sa smú ponúkať - dokončené stavby už do rozpisu nepatria.
+function aktivneZakazkyNazvy(){
+  return zakazky.filter(z=> z.stav !== 'dokoncena').map(z=> z.nazov).sort((a,b)=>a.localeCompare(b,'sk'));
+}
+
+// Kľúč na zoskupovanie názvov tej istej stavby. Okrem diakritiky a veľkosti písmen
+// zahadzuje aj interpunkciu a medzery - "HRADEC KRÁLOVÉ / PAROVOD" a
+// "Hradec Králové - parovod" sú jedna zákazka, nie dve.
+function klucZakazky(nazov){
+  return bezDiakritiky(nazov).replace(/[^a-z0-9]+/g, '');
+}
+
+// Súhrn odpracovaného na zákazke. Slúži dvom veciam naraz: pri mazaní ukáže,
+// o čo by sa prišlo, a pri reklamácii je to doklad, kto tam bol a koľko odrobil.
+function zakazkaStatistika(nazov){
+  const k = klucZakazky(nazov);
+  const moje = (shifts||[]).filter(x=> klucZakazky(x.zakazka||'') === k && jePracovnyDen(x));
+  const datumy = moje.map(x=> x.date).filter(Boolean).sort();
+  const projekty = (projects||[]).filter(p=> klucZakazky(p.name||'') === k);
+  return {
+    dni: moje.length,
+    ludia: new Set(moje.map(x=> x.worker)).size,
+    hodiny: Math.round(moje.reduce((a,x)=> a + hodinyZoZmeny(x), 0) * 10) / 10,
+    prvy: datumy[0] || '',
+    posledny: datumy[datumy.length - 1] || '',
+    projekty: projekty.length,
+  };
+}
+
+// Čo je k zákazke pripojené. Prázdny výsledok je normálny stav, nie chyba -
+// nie každá stavba sa meria a nie na každej sa vedie materiál.
+function prepojeniaZakazky(nazov){
+  const k = klucZakazky(nazov);
+  const zamerania = (projects||[]).filter(p=>
+    klucZakazky(rozpisNazovPreZakazku(p)) === k || klucZakazky(p.name || '') === k);
+  const stavby = (stavbyNaStavbe||[]).filter(st=> klucZakazky(st.name || '') === k);
+  // Materiál napojený cez zameranie (projekt má vlastnú väzbu na stavbu v Materiáli)
+  zamerania.forEach(p=>{
+    const st = stavbaPreZakazku(p);
+    if(st && !stavby.some(x=> x.id === st.id)) stavby.push(st);
+  });
+  return { zamerania, stavby };
+}
+
+function zakazkaSuhrnText(st){
+  if(!st.dni) return '';
+  return st.dni + ' odpracovaných dní · ' + st.ludia + ' ľudí' +
+    (st.hodiny ? ' · ' + formatHodin(st.hodiny) : '') +
+    (st.prvy ? '\n' + st.prvy + ' – ' + st.posledny : '') +
+    (st.projekty ? '\n' + st.projekty + ' projekt(ov) v Zameraní' : '');
+}
+
+const ZAK_STAVY = { aktivna:'Aktívna', pozastavena:'Pozastavená', dokoncena:'Dokončená' };
+
+async function openZakazkyTab(){
+  if(!zakazkyLoaded) await loadZakazky();
+  if(!workersLoaded) await loadWorkers();
+  if(!cars.length) await loadCars();
+  renderZakazkaList();
+}
+
+function renderZakazkaList(){
+  const wrap = $('zakazkaList');
+  if(!wrap) return;
+  const zoznam = zakazky
+    .filter(z=> zakFilterStav === 'vsetky' ? true : (z.stav || 'aktivna') === zakFilterStav)
+    .sort((a,b)=> a.nazov.localeCompare(b.nazov, 'sk'));
+
+  wrap.innerHTML = '';
+  $('zakazkaEmpty').style.display = zoznam.length ? 'none' : 'block';
+
+  zoznam.forEach(z=>{
+    const stav = z.stav || 'aktivna';
+    const odb = odberatelPodlaId(z.odberatelId);
+    const k = z.kontakt || {};
+    const karta = document.createElement('div');
+    karta.className = 'zakazka-karta' + (stav === 'dokoncena' ? ' dokoncena' : '');
+    karta.dataset.id = z.id;
+    karta.innerHTML =
+      '<div class="zk-hlava">' +
+        '<span class="zk-nazov">' + escapeHtml(z.nazov) + '</span>' +
+        '<span class="zk-stav ' + stav + '">' + ZAK_STAVY[stav] + '</span>' +
+      '</div>' +
+      (odb ? '<div class="zk-riadok">pre <b>' + escapeHtml(odb.nazov) + '</b>' +
+             (z.mesto ? ' · ' + escapeHtml(z.mesto) : '') + '</div>'
+           : (z.mesto ? '<div class="zk-riadok">' + escapeHtml(z.mesto) + '</div>' : '')) +
+      (k.meno ? '<div class="zk-riadok">' + escapeHtml(k.meno) +
+                (k.funkcia ? ' — ' + escapeHtml(k.funkcia) : '') + '</div>' : '') +
+      ((z.ludia && z.ludia.length) || z.auto
+        ? '<div class="zk-riadok">' +
+            ((z.ludia && z.ludia.length) ? '<b>' + z.ludia.length + '</b> ľudí' : '') +
+            ((z.ludia && z.ludia.length) && z.auto ? ' · ' : '') +
+            (z.auto ? '🚐 ' + escapeHtml(z.auto) : '') +
+          '</div>'
+        : '') +
+      (k.telefon ? '<a class="zk-tel" href="tel:' + escapeHtml(k.telefon.replace(/\s+/g,'')) + '">📞 ' + escapeHtml(k.telefon) + '</a>' : '');
+
+    // Telefón nesmie otvoriť formulár - je to samostatná akcia.
+    karta.onclick = (e)=>{ if(e.target.closest('.zk-tel')) return; openZakazkaSheet(z.id); };
+    wrap.appendChild(karta);
+  });
+}
+
+function renderZakOdberatelSelect(vybrany){
+  const sel = $('zOdberatel');
+  sel.innerHTML = '<option value="">— nevyplnené —</option>';
+  odberatelia.slice().sort((a,b)=>a.nazov.localeCompare(b.nazov,'sk')).forEach(o=>{
+    const opt = document.createElement('option');
+    opt.value = o.id; opt.textContent = o.nazov;
+    sel.appendChild(opt);
+  });
+  sel.value = vybrany || '';
+}
+
+function renderZakLudia(){
+  const wrap = $('zLudia');
+  if(!rozrobeneLudia.length){ wrap.innerHTML = '<span class="zl-prazdne">Zatiaľ nikto — doplní sa pri rozpise.</span>'; return; }
+  wrap.innerHTML = rozrobeneLudia.map((m,i)=>
+    '<span class="zl-chip">' + escapeHtml(m) + '<button type="button" data-i="' + i + '">✕</button></span>').join('');
+  wrap.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ rozrobeneLudia.splice(Number(b.dataset.i), 1); renderZakLudia(); };
+  });
+}
+
+function openZakazkaSheet(id){
+  const z = id ? zakazky.find(x=> x.id === id) : null;
+  openZakazkaId = id || null;
+  $('zakazkaSheetTitle').textContent = z ? 'Upraviť zákazku' : 'Nová zákazka';
+  $('zNazov').value = z ? z.nazov : '';
+  $('zMesto').value = z ? (z.mesto || '') : '';
+  $('zAdresa').value = z ? (z.adresa || '') : '';
+  $('zStav').value = z ? (z.stav || 'aktivna') : 'aktivna';
+  const k = (z && z.kontakt) || {};
+  $('zKontaktMeno').value = k.meno || '';
+  $('zKontaktFunkcia').value = k.funkcia || '';
+  $('zKontaktTelefon').value = k.telefon || '';
+  $('zAuto').value = z ? (z.auto || '') : '';
+  $('zPoznamka').value = z ? (z.poznamka || '') : '';
+  rozrobeneLudia = z && Array.isArray(z.ludia) ? z.ludia.slice() : [];
+  renderZakLudia();
+  renderZakOdberatelSelect(z ? z.odberatelId : '');
+  const suhrn = $('zSuhrn');
+  if(z){
+    const st = zakazkaStatistika(z.nazov);
+    if(st.dni){
+      suhrn.style.display = 'block';
+      suhrn.innerHTML = '<div class="zs-nadpis">ODPRACOVANÉ NA TEJTO ZÁKAZKE</div>' +
+        '<b>' + st.dni + '</b> dní · <b>' + st.ludia + '</b> ľudí' +
+        (st.hodiny ? ' · <b>' + formatHodin(st.hodiny) + '</b>' : '') + '<br>' +
+        st.prvy + ' – ' + st.posledny +
+        (st.projekty ? '<br><b>' + st.projekty + '</b> projekt(ov) v Zameraní' : '') +
+        (z.dokoncena ? '<br>Ukončená ' + z.dokoncena : '');
+    } else {
+      suhrn.style.display = 'block';
+      suhrn.innerHTML = '<div class="zs-nadpis">ODPRACOVANÉ NA TEJTO ZÁKAZKE</div>Zatiaľ nič — v rozpise sa ešte neobjavila.';
+    }
+  } else suhrn.style.display = 'none';
+
+  const prep = $('zPrepojenia');
+  if(z){
+    const pr = prepojeniaZakazky(z.nazov);
+    prep.style.display = 'block';
+    if(!pr.zamerania.length && !pr.stavby.length){
+      prep.innerHTML = '<div class="zs-nadpis">PATRÍ K TEJTO ZÁKAZKE</div>' +
+        'Zatiaľ nič — a to je v poriadku. Zameranie ani materiál sa k zákazke pripájať nemusia.';
+    } else {
+      prep.innerHTML = '<div class="zs-nadpis">PATRÍ K TEJTO ZÁKAZKE</div>' +
+        (pr.zamerania.length
+          ? '📐 Zameranie: ' + pr.zamerania.map(p=> '<b>' + escapeHtml(p.name || '') + '</b>').join(', ') + '<br>'
+          : '') +
+        (pr.stavby.length
+          ? '📦 Materiál: ' + pr.stavby.map(st=> '<b>' + escapeHtml(st.name || '') + '</b>').join(', ')
+          : '');
+    }
+  } else prep.style.display = 'none';
+
+  $('zakazkaDelete').textContent = 'Zmazať zákazku';
+  $('zakazkaDelete').style.display = (z && isBoss()) ? 'block' : 'none';
+  // Kto nesmie meniť, nech aspoň vidí kontakty - formulár je zamknutý, nie skrytý.
+  ['zNazov','zMesto','zAdresa','zStav','zKontaktMeno','zKontaktFunkcia','zKontaktTelefon','zAuto','zPoznamka','zOdberatel']
+    .forEach(pid=>{ $(pid).disabled = !isBoss(); });
+  $('zakazkaSave').style.display = isBoss() ? 'block' : 'none';
+  $('zNovyOdberatel').style.display = isBoss() ? 'block' : 'none';
+  $('zAutoPick').style.display = isBoss() ? 'block' : 'none';
+  $('zPridajCloveka').style.display = isBoss() ? 'block' : 'none';
+  $('zakKartaOverlay').classList.add('show');
+}
+
+$('newZakazkaBtn').onclick = ()=>{
+  if(!isBoss()){ showToast('Zákazky môže zakladať len majiteľ alebo majster'); return; }
+  openZakazkaSheet(null);
+};
+$('zakazkaCancel').onclick = ()=> $('zakKartaOverlay').classList.remove('show');
+$('zakKartaOverlay').addEventListener('click', e=>{ if(e.target.id==='zakKartaOverlay') $('zakKartaOverlay').classList.remove('show'); });
+
+$('zPridajCloveka').onclick = async ()=>{
+  const volny = (workers||[]).map(w=>w.name).filter(n=> !rozrobeneLudia.includes(n)).sort((a,b)=>a.localeCompare(b,'sk'));
+  if(!volny.length){ showToast('Všetci z tímu sú už pridaní'); return; }
+  const volba = await customPicker('Koho pridať na túto zákazku?', volny.map(n=>({ hodnota:n, nazov:n })));
+  if(!volba) return;
+  rozrobeneLudia.push(volba);
+  renderZakLudia();
+};
+
+$('zAutoPick').onclick = async ()=>{
+  if(!cars.length){ showToast('V Autách zatiaľ nie je žiadne auto'); return; }
+  const volba = await customPicker('Ktoré auto na túto zákazku?',
+    cars.map(c=>({ hodnota: popisAuta(c), nazov: popisAuta(c), popis: (c.who ? 'zvyčajne: ' + c.who : '') })));
+  if(!volba) return;
+  const teraz = $('zAuto').value.trim();
+  if(teraz.split('/').map(x=>x.trim()).includes(volba)){ showToast('Toto auto tam už je'); return; }
+  $('zAuto').value = teraz ? teraz + ' / ' + volba : volba;
+};
+
+$('zakazkaSave').onclick = async ()=>{
+  const nazov = $('zNazov').value.trim();
+  if(!nazov){ showToast('Zákazka musí mať názov'); return; }
+  // Dva rovnaké názvy by znamenali presne ten chaos, ktorý sa týmto ruší.
+  const kolizia = zakazky.find(z=> z.id !== openZakazkaId && bezDiakritiky(z.nazov) === bezDiakritiky(nazov));
+  if(kolizia){ showToast('Zákazka „' + kolizia.nazov + '" už existuje'); return; }
+
+  const data = {
+    nazov,
+    odberatelId: $('zOdberatel').value || '',
+    mesto: $('zMesto').value.trim(),
+    adresa: $('zAdresa').value.trim(),
+    stav: $('zStav').value,
+    kontakt: {
+      meno: $('zKontaktMeno').value.trim(),
+      funkcia: $('zKontaktFunkcia').value.trim(),
+      telefon: $('zKontaktTelefon').value.trim(),
+    },
+    auto: $('zAuto').value.trim(),
+    ludia: rozrobeneLudia.slice(),
+    poznamka: $('zPoznamka').value.trim(),
+  };
+
+  await loadZakazky();
+  const existing = openZakazkaId ? zakazky.find(z=> z.id === openZakazkaId) : null;
+  if(existing){
+    const bolaDokoncena = existing.stav === 'dokoncena';
+    Object.assign(existing, data);
+    if(data.stav === 'dokoncena' && !bolaDokoncena) existing.dokoncena = fmtDate(new Date());
+    if(data.stav !== 'dokoncena') existing.dokoncena = '';
+  } else {
+    zakazky.push({ id:'z-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      zalozena: fmtDate(new Date()), dokoncena:'', ...data });
+  }
+  await saveZakazky();
+  $('zakKartaOverlay').classList.remove('show');
+  renderZakazkaList();
+  showToast(existing ? 'Zákazka uložená' : 'Zákazka založená');
+};
+
+$('zakazkaDelete').onclick = async ()=>{
+  const z = zakazky.find(x=> x.id === openZakazkaId);
+  if(!z) return;
+  const st = zakazkaStatistika(z.nazov);
+
+  // Za čím nič nie je, to sa naozaj zmaže - typický prípad je preklep alebo omyl.
+  if(!st.dni && !st.projekty){
+    const ok = await customConfirm(
+      'Zmazať zákazku „' + z.nazov + '"?\n\nNie sú na nej zapísané žiadne dni ani projekt, takže sa nič nestratí.',
+      'Zmazať', 'Zrušiť');
+    if(!ok) return;
+    await loadZakazky();
+    zakazky = zakazky.filter(x=> x.id !== openZakazkaId);
+    await saveZakazky();
+    $('zakKartaOverlay').classList.remove('show');
+    renderZakazkaList();
+    showToast('Zmazané');
+    return;
+  }
+
+  // Odpracované dni sú doklad pre prípadnú reklamáciu - tie sa nezahadzujú.
+  // Zákazka sa preto ukončí a odloží medzi Dokončené, kde sa dá kedykoľvek dohľadať.
+  if(z.stav === 'dokoncena'){
+    showToast('„' + z.nazov + '" je už v Dokončených — dáta tam ostávajú kvôli reklamáciám', { ms: 6000 });
+    return;
+  }
+  const ok = await customConfirm(
+    'Zákazka „' + z.nazov + '" má za sebou prácu:\n\n' + zakazkaSuhrnText(st) + '\n\n' +
+    'Nezmažem ju, ale ukončím a odložím medzi Dokončené. Zo zoznamu aj z výberov zmizne, ' +
+    'dáta ostanú — pri reklamácii máš čím doložiť, kto tam bol a koľko odrobil.',
+    'Ukončiť a odložiť', 'Zrušiť');
+  if(!ok) return;
+  await loadZakazky();
+  const cielova = zakazky.find(x=> x.id === openZakazkaId);
+  if(cielova){
+    cielova.stav = 'dokoncena';
+    cielova.dokoncena = fmtDate(new Date());
+  }
+  await saveZakazky();
+  $('zakKartaOverlay').classList.remove('show');
+  renderZakazkaList();
+  showToast('„' + z.nazov + '" je v Dokončených — dáta ostali', { ms: 6000 });
+};
+
+$('zakFilter').onclick = (e)=>{
+  const b = e.target.closest('button[data-stav]');
+  if(!b) return;
+  zakFilterStav = b.dataset.stav;
+  $('zakFilter').querySelectorAll('button').forEach(x=> x.classList.toggle('active', x === b));
+  renderZakazkaList();
+};
+
+/* ---------- Odberatelia ---------- */
+function renderOdbKontakty(){
+  const wrap = $('oKontakty');
+  if(!rozrobeneKontakty.length){ wrap.innerHTML = '<div class="zl-prazdne" style="font-size:12px; color:var(--muted); margin-bottom:8px;">Zatiaľ žiadny kontakt.</div>'; return; }
+  wrap.innerHTML = '';
+  rozrobeneKontakty.forEach((k, i)=>{
+    const box = document.createElement('div');
+    box.className = 'o-kontakt';
+    box.innerHTML =
+      '<div class="ok-hlava"><b style="font-size:12px; color:var(--muted);">Kontakt ' + (i+1) + '</b>' +
+      '<button type="button" class="ok-zmaz" data-i="' + i + '">✕</button></div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Meno</label><input type="text" data-pole="meno" data-i="' + i + '" value="' + escapeHtml(k.meno||'') + '"></div>' +
+        '<div class="field"><label>Funkcia</label><input type="text" data-pole="funkcia" data-i="' + i + '" value="' + escapeHtml(k.funkcia||'') + '"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Telefón</label><input type="tel" data-pole="telefon" data-i="' + i + '" value="' + escapeHtml(k.telefon||'') + '"></div>' +
+        '<div class="field"><label>E-mail</label><input type="email" data-pole="email" data-i="' + i + '" value="' + escapeHtml(k.email||'') + '"></div>' +
+      '</div>';
+    wrap.appendChild(box);
+  });
+  wrap.querySelectorAll('input[data-pole]').forEach(inp=>{
+    inp.oninput = ()=>{ rozrobeneKontakty[Number(inp.dataset.i)][inp.dataset.pole] = inp.value; };
+  });
+  wrap.querySelectorAll('.ok-zmaz').forEach(b=>{
+    b.onclick = ()=>{ rozrobeneKontakty.splice(Number(b.dataset.i), 1); renderOdbKontakty(); };
+  });
+}
+
+function openOdberatelSheet(id){
+  const o = id ? odberatelPodlaId(id) : null;
+  openOdberatelId = id || null;
+  $('odberatelSheetTitle').textContent = o ? 'Upraviť odberateľa' : 'Nový odberateľ';
+  $('oNazov').value = o ? o.nazov : '';
+  $('oIco').value = o ? (o.ico || '') : '';
+  $('oMesto').value = o ? (o.mesto || '') : '';
+  $('oAdresa').value = o ? (o.adresa || '') : '';
+  $('oPoznamka').value = o ? (o.poznamka || '') : '';
+  rozrobeneKontakty = o && Array.isArray(o.kontakty) ? JSON.parse(JSON.stringify(o.kontakty)) : [];
+  renderOdbKontakty();
+  $('odberatelDelete').style.display = (o && isBoss()) ? 'block' : 'none';
+  $('odberatelOverlay').classList.add('show');
+}
+
+$('zNovyOdberatel').onclick = ()=> openOdberatelSheet(null);
+$('odberatelCancel').onclick = ()=> $('odberatelOverlay').classList.remove('show');
+$('odberatelOverlay').addEventListener('click', e=>{ if(e.target.id==='odberatelOverlay') $('odberatelOverlay').classList.remove('show'); });
+$('oPridajKontakt').onclick = ()=>{ rozrobeneKontakty.push({ meno:'', funkcia:'', telefon:'', email:'' }); renderOdbKontakty(); };
+
+$('odberatelSave').onclick = async ()=>{
+  const nazov = $('oNazov').value.trim();
+  if(!nazov){ showToast('Odberateľ musí mať názov'); return; }
+  const data = {
+    nazov, ico: $('oIco').value.trim(), mesto: $('oMesto').value.trim(),
+    adresa: $('oAdresa').value.trim(), poznamka: $('oPoznamka').value.trim(),
+    kontakty: rozrobeneKontakty.filter(k=> (k.meno||k.telefon||k.email||'').trim()),
+  };
+  await loadZakazky();
+  let id = openOdberatelId;
+  const existing = id ? odberatelPodlaId(id) : null;
+  if(existing) Object.assign(existing, data);
+  else {
+    id = 'o-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+    odberatelia.push({ id, ...data });
+  }
+  await saveOdberatelia();
+  $('odberatelOverlay').classList.remove('show');
+  // Nový odberateľ sa rovno nastaví do práve otvorenej zákazky - preto sa zakladal.
+  if($('zakKartaOverlay').classList.contains('show')) renderZakOdberatelSelect(id);
+  renderZakazkaList();
+  showToast(existing ? 'Odberateľ uložený' : 'Odberateľ pridaný');
+};
+
+$('odberatelDelete').onclick = async ()=>{
+  const o = odberatelPodlaId(openOdberatelId);
+  if(!o) return;
+  const pouzity = zakazky.filter(z=> z.odberatelId === o.id).length;
+  if(pouzity){ showToast('„' + o.nazov + '" má ' + pouzity + ' zákaziek — najprv ich prepoj inam'); return; }
+  const ok = await customConfirm('Zmazať odberateľa „' + o.nazov + '"?', 'Zmazať', 'Zrušiť');
+  if(!ok) return;
+  await loadZakazky();
+  odberatelia = odberatelia.filter(x=> x.id !== openOdberatelId);
+  await saveOdberatelia();
+  $('odberatelOverlay').classList.remove('show');
+  renderZakOdberatelSelect('');
+  showToast('Zmazané');
+};
+
+/* ---------- Založenie zákaziek z toho, čo už v appke je ---------- */
+// Rovnaká stavba je dnes v dátach pod viacerými zápismi (PRAHA / Praha / praha).
+// Nástroj ich zoskupí a Matúš odklikne, ktoré sú naozaj tá istá zákazka.
+$('zakazkyZRozpisuBtn').onclick = async ()=>{
+  if(!isBoss()){ showToast('Toto môže robiť len majiteľ alebo majster'); return; }
+  await loadZakazky();
+  await loadShifts();
+  if(projects.length === 0) await loadProjects();
+
+  const pocty = {};
+  (shifts||[]).forEach(sh=>{
+    const n = (sh.zakazka||'').trim();
+    if(n) pocty[n] = (pocty[n] || 0) + 1;
+  });
+  (projects||[]).forEach(p=>{
+    const n = (p.name||'').trim();
+    if(n && !pocty[n]) pocty[n] = 0;
+  });
+
+  // Zoskup varianty toho istého názvu (bez diakritiky a veľkosti písmen).
+  const skupiny = {};
+  Object.keys(pocty).forEach(n=>{
+    const k = klucZakazky(n);
+    if(!k) return;
+    (skupiny[k] = skupiny[k] || []).push(n);
+  });
+
+  const nove = Object.keys(skupiny)
+    .filter(k=> !zakazky.some(z=> klucZakazky(z.nazov) === k))
+    .map(k=>{
+      const varianty = skupiny[k].sort((a,b)=> (pocty[b]||0) - (pocty[a]||0));
+      return { navrh: varianty[0], varianty, dni: varianty.reduce((a,v)=> a + (pocty[v]||0), 0) };
+    })
+    .sort((a,b)=> b.dni - a.dni);
+
+  if(!nove.length){ showToast('Všetko, čo je v rozpise a zameraní, už má svoju zákazku'); return; }
+
+  const ok = await customConfirm(
+    'Našiel som ' + nove.length + ' názvov, ktoré ešte nemajú zákazku:\n\n' +
+    nove.slice(0, 12).map(n=> '• ' + n.navrh + ' (' + n.dni + ' dní' +
+      (n.varianty.length > 1 ? ', ' + n.varianty.length + ' zápisov názvu' : '') + ')').join('\n') +
+    (nove.length > 12 ? '\n… a ďalších ' + (nove.length - 12) : '') +
+    '\n\nZaložím ich ako aktívne zákazky. Odberateľa a kontakty doplníš potom.',
+    'Založiť', 'Zrušiť');
+  if(!ok) return;
+
+  const dnes = fmtDate(new Date());
+  nove.forEach(n=>{
+    zakazky.push({
+      id:'z-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      nazov: n.navrh, odberatelId:'', mesto:'', adresa:'', stav:'aktivna',
+      kontakt:{ meno:'', funkcia:'', telefon:'' }, auto:'', ludia:[],
+      poznamka: n.varianty.length > 1 ? 'V dátach aj ako: ' + n.varianty.slice(1).join(', ') : '',
+      zalozena: dnes, dokoncena:'',
+    });
+  });
+  await saveZakazky();
+  renderZakazkaList();
+  showToast('Založených ' + nove.length + ' zákaziek', { ms: 6000 });
+};
 
 // ---------- AUTÁ ----------
 let cars = [];
@@ -4468,6 +5186,72 @@ function nazvyVRozpise(){
   return [...new Set((shifts||[]).map(s=>(s.zakazka||'').trim()).filter(Boolean))].sort();
 }
 
+// Zoznam, z ktorého sa vyberá. Prvé sú založené aktívne zákazky; pod nimi názvy,
+// ktoré v dátach existujú, ale zákazku ešte nemajú - inak by sa k starým zápisom
+// nedalo vrátiť, kým Matúš nepredá všetko cez "Založiť zákazky z rozpisu".
+function moznostiZakaziek(){
+  const zoznam = [];
+  const uz = new Set();
+  aktivneZakazkyNazvy().forEach(n=>{
+    zoznam.push({ hodnota:n, nazov:n, popis: popisZakazky(n) });
+    uz.add(klucZakazky(n));
+  });
+  nazvyVRozpise().forEach(n=>{
+    if(uz.has(klucZakazky(n))) return;
+    uz.add(klucZakazky(n));
+    zoznam.push({ hodnota:n, nazov:n, popis:'zatiaľ bez založenej zákazky' });
+  });
+  return zoznam;
+}
+
+function popisZakazky(nazov){
+  const z = zakazkaPodlaNazvu(nazov);
+  if(!z) return '';
+  const odb = odberatelPodlaId(z.odberatelId);
+  return [odb ? odb.nazov : '', z.mesto || ''].filter(Boolean).join(' · ');
+}
+
+// Založenie zákazky priamo z rozpisu - Matúš nemusí odbiehať inam. Podrobnosti
+// (odberateľ, kontakt) sa doplnia potom v Zákazkách.
+async function vytvorZakazkuRychlo(){
+  const nazov = (await customPrompt('Názov novej zákazky', '') || '').trim();
+  if(!nazov) return null;
+  if(!zakazkyLoaded) await loadZakazky();
+  const uz = zakazky.find(z=> klucZakazky(z.nazov) === klucZakazky(nazov));
+  if(uz){
+    showToast('Zákazka „' + uz.nazov + '" už existuje — použil som ju', { ms: 5000 });
+    return uz.nazov;
+  }
+  const podobny = podobnyNazovZakazky(nazov);
+  if(podobny){
+    const ok = await customConfirm(
+      'V rozpise sa už používa „' + podobny + '".\n\nJe „' + nazov + '" tá istá stavba?\n' +
+      'Ak áno, použi radšej existujúci názov — inak vzniknú dve zákazky a rozpis ich zobrazí zvlášť.',
+      'Použiť „' + podobny + '"', 'Nie, je to iná');
+    if(ok) return podobny;
+  }
+  await loadZakazky();
+  zakazky.push({ id:'z-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+    nazov, odberatelId:'', mesto:'', adresa:'', stav:'aktivna',
+    kontakt:{ meno:'', funkcia:'', telefon:'' }, auto:'', ludia:[], poznamka:'',
+    zalozena: fmtDate(new Date()), dokoncena:'' });
+  await saveZakazky();
+  showToast('Zákazka „' + nazov + '" založená — údaje doplníš v Zákazkách', { ms: 6000 });
+  return nazov;
+}
+
+// Jeden výber pre celú appku. Vracia názov zákazky, alebo null pri zrušení.
+async function vyberZakazku(otazka){
+  if(!zakazkyLoaded) await loadZakazky();
+  const moznosti = moznostiZakaziek();
+  moznosti.push({ hodnota:'__nova__', nazov:'➕ Nová zákazka…', popis:'založí sa aj v Zákazkách' });
+  const volba = await customPicker(otazka || 'Ktorá zákazka?', moznosti,
+    'Zatiaľ nie je založená žiadna zákazka.');
+  if(!volba) return null;
+  if(volba === '__nova__') return await vytvorZakazkuRychlo();
+  return volba;
+}
+
 let upravovanaZakazka = null;
 
 function otvorZakazku(id){
@@ -4497,11 +5281,25 @@ function otvorZakazku(id){
   sel.value = najdena ? najdena.id : '';
 
   // Názvy používané v rozpise
-  const dl = $('zkRozpisMoznosti');
-  dl.innerHTML = '';
-  nazvyVRozpise().forEach(n=>{ const o=document.createElement('option'); o.value=n; dl.appendChild(o); });
+  // Vyberá sa zo zoznamu - písaním rukou tu vznikali ďalšie varianty tej istej stavby.
+  // Prázdne je plnohodnotná voľba: zameranie nemusí patriť k žiadnej zákazke.
   $('zkRozpis').value = p.rozpisNazov || '';
-  $('zkRozpis').placeholder = 'ak nevyplníš, použije sa „' + (p.name||'') + '"';
+  $('zkRozpis').placeholder = 'nechaj prázdne, ak k rozpisu nepatrí';
+  $('zkRozpis').onclick = async ()=>{
+    if(!zakazkyLoaded) await loadZakazky();
+    const moznosti = [{ hodnota:'__ziadna__', nazov:'— neprepojené —', popis:'zameranie nepatrí k žiadnej zákazke' }]
+      .concat(moznostiZakaziek());
+    moznosti.push({ hodnota:'__nova__', nazov:'➕ Nová zákazka…', popis:'založí sa aj v Zákazkách' });
+    const volba = await customPicker('K akej zákazke patrí toto zameranie?', moznosti);
+    if(!volba) return;
+    if(volba === '__ziadna__'){ $('zkRozpis').value = ''; return; }
+    if(volba === '__nova__'){
+      const nova = await vytvorZakazkuRychlo();
+      if(nova) $('zkRozpis').value = nova;
+      return;
+    }
+    $('zkRozpis').value = volba;
+  };
 
   $('zakazkaOverlay').classList.add('show');
   setTimeout(()=> $('zkNazov').focus(), 60);
@@ -6510,7 +7308,9 @@ $('rozpisPrevzatBtn').onclick = async ()=>{
 };
 
 // ---------- (10) Kontrola rozpisu pred odoslaním ----------
-$('rozpisKontrolaBtn').onclick = ()=>{
+// Nájdené problémy nesú aj svoju opravu. Každá oprava vopred povie, čoho presne
+// sa dotkne, a dá sa zrušiť - rozpis je práca 45 ľudí, nesmie sa nič diať potichu.
+function najdiProblemyRozpisu(){
   const mon = mondayOf(weekAnchor);
   const dni = []; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); dni.push(fmtDate(d)); }
   const wk = weekKey(weekAnchor);
@@ -6519,45 +7319,243 @@ $('rozpisKontrolaBtn').onclick = ()=>{
   // kto nemá v týždni nič
   const zaradeni = new Set(shifts.filter(s=>dni.includes(s.date)).map(s=>s.worker));
   const bez = workers.filter(w=>!zaradeni.has(w.name)).map(w=>w.name);
-  if(bez.length) problemy.push({ vazne:true, text:'Bez zaradenia (' + bez.length + '): ' + bez.join(', ') });
+  if(bez.length) problemy.push({
+    vazne:true, text:'Bez zaradenia (' + bez.length + '): ' + bez.join(', '),
+    opravaText:'Zaradiť ich…', oprava: ()=> opravZaradenie(bez, dni),
+  });
 
   // zákazky bez auta
   const zakazky = [...new Set(shifts.filter(s=>dni.includes(s.date) && jePracovnyDen(s) && (s.zakazka||'').trim()).map(s=>s.zakazka.trim()))];
   const bezAuta = zakazky.filter(z=> !String(rozpisAuto[wk+'|'+z]||'').trim());
-  if(bezAuta.length) problemy.push({ vazne:false, text:'Bez prideleného auta: ' + bezAuta.join(', ') });
+  if(bezAuta.length) problemy.push({
+    vazne:false, text:'Bez prideleného auta: ' + bezAuta.join(', '),
+    opravaText:'Prideliť autá…', oprava: ()=> opravAuta(bezAuta, wk),
+  });
 
   // jedno auto na dvoch zákazkách
   const kdeJe = {};
   zakazky.forEach(z=> String(rozpisAuto[wk+'|'+z]||'').split('/').map(x=>x.trim()).filter(Boolean).forEach(a=> (kdeJe[a]=kdeJe[a]||[]).push(z)));
   Object.keys(kdeJe).filter(a=>kdeJe[a].length>1).forEach(a=>
-    problemy.push({ vazne:true, text:'Auto „' + a + '" je pridelené na ' + kdeJe[a].length + ' zákazkách: ' + kdeJe[a].join(', ') }));
+    problemy.push({
+      vazne:true, text:'Auto „' + a + '" je pridelené na ' + kdeJe[a].length + ' zákazkách: ' + kdeJe[a].join(', '),
+      opravaText:'Nechať len na jednej…', oprava: ()=> opravKoliziuAuta(a, kdeJe[a], wk),
+    }));
 
   // práca na sviatok
   dni.forEach(d=>{
     const sv = sviatokPre(d);
     if(!sv) return;
     const kolko = shifts.filter(s=>s.date===d && jePracovnyDen(s) && (s.zakazka||'').trim()).length;
-    if(kolko) problemy.push({ vazne:false, text: sv.kde.join('+') + ' sviatok ' + sv.nazov + ' (' + d + ') — máš tam ' + kolko + ' ľudí v práci' });
+    if(kolko) problemy.push({
+      vazne:false, text: sv.kde.join('+') + ' sviatok ' + sv.nazov + ' (' + d + ') — máš tam ' + kolko + ' ľudí v práci',
+      opravaText:'Pozrieť ten deň', oprava: ()=> ukazDenVTime(d),
+    });
+  });
+
+  // víkend - rozpis sa píše na pracovný týždeň, víkend býva omyl z importu
+  const vikendove = shifts.filter(s=> [dni[5], dni[6]].includes(s.date) && jePracovnyDen(s) && (s.zakazka||'').trim());
+  if(vikendove.length) problemy.push({
+    vazne:false, text: vikendove.length + ' zmien je cez víkend (' + [...new Set(vikendove.map(s=>s.zakazka.trim()))].join(', ') + ')',
+    opravaText:'Zmazať víkend…', oprava: ()=> opravVikend(vikendove),
   });
 
   // chýbajúci čas (bez neho sa nedajú spočítať hodiny)
-  const bezCasu = shifts.filter(s=>dni.includes(s.date) && jePracovnyDen(s) && (s.zakazka||'').trim() && !hodinyZoZmeny(s)).length;
-  if(bezCasu) problemy.push({ vazne:false, text: bezCasu + ' zmien nemá vyplnený čas — hodiny sa z nich nedajú spočítať' });
+  const bezCasu = shifts.filter(s=>dni.includes(s.date) && jePracovnyDen(s) && (s.zakazka||'').trim() && !hodinyZoZmeny(s));
+  if(bezCasu.length) problemy.push({
+    vazne:false, text: bezCasu.length + ' zmien nemá vyplnený čas — hodiny sa z nich nedajú spočítať',
+    opravaText:'Doplniť štandardný čas…', oprava: ()=> opravChybajuciCas(bezCasu),
+  });
 
+  return problemy;
+}
+
+function vykresliKontrolu(){
+  const problemy = najdiProblemyRozpisu();
   const wrap = $('kontrolaVysledok');
   wrap.innerHTML = '';
   if(!problemy.length){
     wrap.innerHTML = '<div class="kontrola-riadok" style="background:rgba(0,217,142,.08); border-color:var(--ok); color:var(--ok);">✓ Rozpis je v poriadku — môžeš ho poslať.</div>';
-  } else {
-    problemy.forEach(p=>{
-      const d = document.createElement('div');
-      d.className = 'kontrola-riadok' + (p.vazne ? ' vazne' : '');
-      d.innerHTML = '<span>' + (p.vazne ? '⚠️' : 'ℹ️') + '</span><span>' + escapeHtml(p.text) + '</span>';
-      wrap.appendChild(d);
-    });
+    return;
   }
+  problemy.forEach(p=>{
+    const d = document.createElement('div');
+    d.className = 'kontrola-riadok' + (p.vazne ? ' vazne' : '');
+    d.innerHTML = '<span>' + (p.vazne ? '⚠️' : 'ℹ️') + '</span>' +
+                  '<span class="kr-text">' + escapeHtml(p.text) + '</span>';
+    if(p.oprava){
+      const b = document.createElement('button');
+      b.className = 'kr-oprav';
+      b.type = 'button';
+      b.textContent = p.opravaText || 'Opraviť';
+      b.onclick = async ()=>{
+        b.disabled = true;
+        try{ await p.oprava(); }
+        finally{ b.disabled = false; }
+        vykresliKontrolu();      // po oprave prepočítaj, nech je vidieť, čo ostalo
+      };
+      d.appendChild(b);
+    }
+    wrap.appendChild(d);
+  });
+}
+
+$('rozpisKontrolaBtn').onclick = ()=>{
+  vykresliKontrolu();
   $('kontrolaOverlay').querySelector('h2').textContent = 'Kontrola rozpisu';
   $('kontrolaOverlay').classList.add('show');
+};
+
+/* ---------- jednotlivé opravy ---------- */
+
+// Nezaradených ľudí prechádza po jednom - každý môže ísť inam, hromadne to nedáva zmysel.
+async function opravZaradenie(mena, dni){
+  const zakazky = [...new Set(shifts.filter(s=>dni.includes(s.date) && jePracovnyDen(s) && (s.zakazka||'').trim()).map(s=>s.zakazka.trim()))].sort();
+  const prace = dni.slice(0, 5);
+  let pridanych = 0;
+  for(const meno of mena){
+    const moznosti = zakazky.map(z=>({ hodnota:'z:'+z, nazov:z, popis:'Po–Pi so štandardným časom' }));
+    moznosti.push({ hodnota:'t:dovolenka', nazov:'Dovolenka', popis:'celý pracovný týždeň' });
+    moznosti.push({ hodnota:'t:pn', nazov:'PN / choroba', popis:'celý pracovný týždeň' });
+    moznosti.push({ hodnota:'__nova__', nazov:'➕ Iná zákazka…', popis:'zadáš názov' });
+    const volba = await customPicker('Kam zaradiť: ' + meno + '?', moznosti);
+    if(!volba) break;                       // Zrušiť = koniec, ostatní ostanú nezaradení
+    let typ = 'praca', zakazka = '';
+    if(volba === '__nova__'){
+      zakazka = (await customPrompt('Názov zákazky pre ' + meno, '') || '').trim();
+      if(!zakazka) continue;
+    } else if(volba.startsWith('t:')){ typ = volba.slice(2); }
+    else { zakazka = volba.slice(2); }
+
+    prace.forEach(ds=>{
+      if(findEntry(ds, meno)) return;       // čo už má, nechaj tak
+      const cas = casPreDatum(ds);
+      shifts.push({ id:'s-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+        date:ds, worker:meno, typ, zakazka,
+        from: typ === 'praca' ? cas.from : '', to: typ === 'praca' ? cas.to : '', poznamka:'' });
+      pridanych++;
+    });
+  }
+  if(!pridanych) return;
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast('Zaradených ' + pridanych + ' dní', { ms: 5000 });
+}
+
+// Zákazky bez auta - jedna po druhej, výber zo skutočného zoznamu áut.
+async function opravAuta(zakazky, wk){
+  if(!cars.length){ showToast('V Autách zatiaľ nie je žiadne auto'); return; }
+  let zmenene = 0;
+  for(const z of zakazky){
+    const volba = await customPicker('Ktoré auto ide na „' + z + '"?',
+      cars.map(c=>({ hodnota: popisAuta(c), nazov: popisAuta(c), popis: (c.who ? 'zvyčajne: ' + c.who : '') })));
+    if(!volba) break;
+    rozpisAuto[wk + '|' + z] = volba;
+    zmenene++;
+  }
+  if(!zmenene) return;
+  await saveRozpisAuto();
+  renderRozpis();
+  showToast('Auto pridelené na ' + zmenene + ' zákazkách');
+}
+
+// Jedno auto na dvoch stavbách - vyberie sa, kde ostane, z ostatných sa odoberie.
+async function opravKoliziuAuta(auto, zakazky, wk){
+  const volba = await customPicker('Na ktorej zákazke má auto „' + auto + '" ostať?',
+    zakazky.map(z=>({ hodnota:z, nazov:z, popis:'z ostatných sa odoberie' })));
+  if(!volba) return;
+  zakazky.filter(z=> z !== volba).forEach(z=>{
+    const zvysok = String(rozpisAuto[wk+'|'+z]||'').split('/').map(x=>x.trim())
+      .filter(x=> x && x !== auto).join(' / ');
+    if(zvysok) rozpisAuto[wk+'|'+z] = zvysok; else delete rozpisAuto[wk+'|'+z];
+  });
+  await saveRozpisAuto();
+  renderRozpis();
+  showToast('Auto ostáva len na „' + volba + '"');
+}
+
+// Chýbajúci čas doplní šablóna - pondelok má iný čas než piatok, preto sa počíta po dňoch.
+async function opravChybajuciCas(zmeny){
+  const ukazka = casPreDatum(zmeny[0].date);
+  const ok = await customConfirm(
+    'Doplniť štandardný čas do ' + zmeny.length + ' zmien?\n\n' +
+    'Po ' + CAS_SABLONA[1].from + '–' + CAS_SABLONA[1].to + ' · ' +
+    'Ut–Št ' + CAS_SABLONA[2].from + '–' + CAS_SABLONA[2].to + ' · ' +
+    'Pi ' + CAS_SABLONA[5].from + '–' + CAS_SABLONA[5].to + '\n\n' +
+    'Kto má čas vyplnený, toho sa to netýka.',
+    'Doplniť', 'Zrušiť');
+  if(!ok) return;
+  zmeny.forEach(z=>{
+    const cas = casPreDatum(z.date);
+    z.from = cas.from; z.to = cas.to;
+  });
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast('Čas doplnený do ' + zmeny.length + ' zmien', { ms: 5000 });
+}
+
+// Víkendové zmeny bývajú omyl (rozpis sa píše na Po–Pi). Mazanie je nevratné, preto potvrdenie.
+async function opravVikend(zmeny){
+  const dni = [...new Set(zmeny.map(z=>z.date))].sort();
+  const ok = await customConfirm(
+    'Zmazať ' + zmeny.length + ' víkendových zmien?\n\n' +
+    'Dni: ' + dni.join(', ') + '\n' +
+    'Ľudí: ' + new Set(zmeny.map(z=>z.worker)).size + '\n\n' +
+    'Vrátiť sa to nedá. Ak sa cez víkend naozaj robí, nechaj to tak.',
+    'Zmazať', 'Nechať');
+  if(!ok) return;
+  const kolko = odstranZmeny(zmeny);
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast('Zmazaných ' + kolko + ' víkendových zmien', { ms: 5000 });
+}
+
+// Sviatok neznamená automaticky chybu (české sviatky slovenskej partii nevadia),
+// tak sa len otvorí ten deň a Matúš rozhodne sám.
+function ukazDenVTime(ds){
+  $('kontrolaOverlay').classList.remove('show');
+  const mon = mondayOf(new Date(ds + 'T12:00:00'));
+  timTyzdenAnchor = new Date(mon);
+  timDenIdx = Math.round((new Date(ds + 'T12:00:00') - mon) / 86400000);
+  openTab('kalendar');
+  prepniKalendarRezim('tim');
+  if(typeof otvorDetailNaTelefone === 'function') otvorDetailNaTelefone('kalendar');
+}
+
+// Zmazanie celého týždňa - keď treba rozpis napísať odznova. Je to veľa dát naraz,
+// preto sa vypíše, čoho presne sa to týka, a potvrdzuje sa napísaním slova.
+$('rozpisZmazatBtn').onclick = async ()=>{
+  if(!isBoss()){ showToast('Toto môže robiť len majiteľ alebo majster'); return; }
+  const mon = mondayOf(weekAnchor);
+  const dni = []; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); dni.push(fmtDate(d)); }
+  const moje = (shifts||[]).filter(x=> dni.includes(x.date));
+  if(!moje.length){ showToast('V tomto týždni nie je čo mazať'); return; }
+
+  const f = (d)=> d.toLocaleDateString('sk-SK', { day:'numeric', month:'numeric' });
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const zakazky_ = [...new Set(moje.map(x=>(x.zakazka||'').trim()).filter(Boolean))];
+  const odpoved = await customPrompt(
+    'Zmazať celý týždeň ' + f(mon) + ' – ' + f(sun) + '?\n\n' +
+    new Set(moje.map(x=>x.worker)).size + ' ľudí · ' + moje.length + ' záznamov\n' +
+    'Stavby: ' + (zakazky_.join(', ') || '—') + '\n\n' +
+    'Vrátiť sa to nedá. Napíš ZMAZAT, ak to naozaj chceš.', '');
+  if(String(odpoved || '').trim().toUpperCase() !== 'ZMAZAT'){
+    if(odpoved !== null) showToast('Nezmazané — slovo nesedelo');
+    return;
+  }
+
+  const kolko = odstranZmeny(moje);
+  await saveShifts();
+
+  // Autá priradené k tomuto týždňu už nemajú k čomu patriť.
+  await loadRozpisAuto();
+  const wk = weekKey(mon);
+  let zmena = false;
+  Object.keys(rozpisAuto).forEach(k=>{ if(k.startsWith(wk + '|')){ delete rozpisAuto[k]; zmena = true; } });
+  if(zmena) await saveRozpisAuto();
+
+  renderRozpis(); renderCalendar();
+  if(kalendarRezim === 'tim') renderTimKalendar();
+  showToast('Týždeň zmazaný — ' + kolko + ' záznamov', { ms: 6000 });
 };
 
 // ---------- (11) Tlač rozpisu ----------
@@ -6674,7 +7672,10 @@ function renderRozpis(){
         <div class="zak-suhrn"><b>${ludiaZak.length}</b> ľudí · <b>${dniSpolu}</b> dní${hodinySpolu ? ' · <b>' + formatHodin(hodinySpolu) + '</b>' : ''}</div>
       </div>
       <div class="zak-workers">${workerNames}</div>
-      ${isBoss() ? '<button type="button" class="zak-pridaj" data-zak="' + escapeHtml(zak) + '">＋ pridať človeka na túto zákazku</button>' : ''}
+      ${isBoss() ? '<div class="zak-akcie">' +
+        '<button type="button" class="zak-pridaj" data-zak="' + escapeHtml(zak) + '">＋ pridať človeka</button>' +
+        '<button type="button" class="zak-upravit" data-zak="' + escapeHtml(zak) + '">⇄ upraviť túto stavbu</button>' +
+        '</div>' : ''}
       <div class="auto-field">
         <label>Auto</label>
         <div class="auto-riadok">
@@ -6728,10 +7729,105 @@ function renderRozpis(){
       return;
     }
     const pridaj = e.target.closest('.zak-pridaj[data-zak]');
-    if(pridaj) await pridajClovekaNaZakazku(pridaj.dataset.zak, mon, daysInWeek);
+    if(pridaj){ await pridajClovekaNaZakazku(pridaj.dataset.zak, mon, daysInWeek); return; }
+    const uprav = e.target.closest('.zak-upravit[data-zak]');
+    if(uprav) await upravStavbuVTyzdni(uprav.dataset.zak, mon, daysInWeek);
   };
 
   zvyrazniKolizieAut();
+}
+
+// Zmeny jednej stavby v zobrazenom týždni. Všetky úpravy pracujú len s nimi -
+// minulé týždne sa nikdy nesmú zmeniť, tie sú už odrobené.
+function zmenyStavbyVTyzdni(zak, daysInWeek){
+  return (shifts||[]).filter(x=> daysInWeek.includes(x.date) && (x.zakazka||'').trim() === zak);
+}
+
+// Menu úprav pre jednu stavbu v týždni.
+async function upravStavbuVTyzdni(zak, mon, daysInWeek){
+  const moje = zmenyStavbyVTyzdni(zak, daysInWeek);
+  const ludia = [...new Set(moje.map(x=> x.worker))].sort((a,b)=>a.localeCompare(b,'sk'));
+  const volba = await customPicker('„' + zak + '" — ' + ludia.length + ' ľudí, ' + moje.length + ' dní', [
+    { hodnota:'prehodit', nazov:'⇄ Prehodiť celú partiu inam', popis:'všetkých ' + ludia.length + ' ľudí presunie na inú zákazku' },
+    { hodnota:'vymenit',  nazov:'👤 Vymeniť človeka za iného', popis:'napr. keď niekto ochorel' },
+    { hodnota:'presunut', nazov:'→ Presunúť jedného človeka inam', popis:'ostatní ostanú tu' },
+    { hodnota:'zmazat',   nazov:'🗑 Zmazať túto stavbu z týždňa', popis:moje.length + ' dní, len tento týždeň' },
+  ]);
+  if(!volba) return;
+  if(volba === 'prehodit') await prehodPartiu(zak, moje);
+  if(volba === 'vymenit')  await vymenClovekaNaStavbe(zak, moje, ludia);
+  if(volba === 'presunut') await presunClovekaInam(zak, moje, ludia, daysInWeek);
+  if(volba === 'zmazat')   await zmazStavbuZTyzdna(zak, moje);
+}
+
+async function prehodPartiu(zak, moje){
+  const kam = await vyberZakazku('Kam prehodiť celú partiu z „' + zak + '"?');
+  if(!kam || kam === zak) return;
+  const ok = await customConfirm(
+    'Prehodiť z „' + zak + '" na „' + kam + '"?\n\n' +
+    new Set(moje.map(x=>x.worker)).size + ' ľudí · ' + moje.length + ' dní\n\nTýka sa to len tohto týždňa.',
+    'Prehodiť', 'Zrušiť');
+  if(!ok) return;
+  moje.forEach(x=>{ x.zakazka = kam; });
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast('Prehodené na „' + kam + '"', { ms: 5000 });
+}
+
+async function vymenClovekaNaStavbe(zak, moje, ludia){
+  const kto = await customPicker('Koho vymeniť na „' + zak + '"?',
+    ludia.map(n=>({ hodnota:n, nazov:n, popis: moje.filter(x=>x.worker===n).length + ' dní' })));
+  if(!kto) return;
+  const volny = (workers||[]).map(w=>w.name).filter(n=> !ludia.includes(n)).sort((a,b)=>a.localeCompare(b,'sk'));
+  if(!volny.length){ showToast('Nie je za koho vymeniť — všetci sú už na tejto stavbe'); return; }
+  const zaKoho = await customPicker('Kto pôjde namiesto neho?', volny.map(n=>({ hodnota:n, nazov:n })));
+  if(!zaKoho) return;
+
+  const jehoDni = moje.filter(x=> x.worker === kto);
+  const kolizie = jehoDni.filter(x=> findEntry(x.date, zaKoho));
+  const ok = await customConfirm(
+    'Na „' + zak + '" pôjde ' + zaKoho + ' namiesto ' + kto + '.\n\n' +
+    jehoDni.length + ' dní' +
+    (kolizie.length ? '\n\nPozor: ' + zaKoho + ' už má ' + kolizie.length + ' z týchto dní obsadených — tie sa prepíšu.' : ''),
+    'Vymeniť', 'Zrušiť');
+  if(!ok) return;
+
+  // Najprv preč s tým, čo by kolidovalo, potom prepíš meno - inak by vznikli dva zápisy na deň.
+  odstranZmeny(kolizie.map(x=> findEntry(x.date, zaKoho)).filter(Boolean));
+  jehoDni.forEach(x=>{ x.worker = zaKoho; });
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast(zaKoho + ' nastúpil za ' + kto, { ms: 5000 });
+}
+
+async function presunClovekaInam(zak, moje, ludia, daysInWeek){
+  const kto = await customPicker('Koho presunúť zo „' + zak + '"?',
+    ludia.map(n=>({ hodnota:n, nazov:n, popis: moje.filter(x=>x.worker===n).length + ' dní' })));
+  if(!kto) return;
+  const kam = await vyberZakazku('Kam presunúť ' + kto + '?');
+  if(!kam || kam === zak) return;
+  const jehoDni = moje.filter(x=> x.worker === kto);
+  const ok = await customConfirm(
+    kto + ': „' + zak + '" → „' + kam + '"\n\n' + jehoDni.length + ' dní tohto týždňa.',
+    'Presunúť', 'Zrušiť');
+  if(!ok) return;
+  jehoDni.forEach(x=>{ x.zakazka = kam; });
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast(kto + ' je na „' + kam + '"', { ms: 5000 });
+}
+
+async function zmazStavbuZTyzdna(zak, moje){
+  const ok = await customConfirm(
+    'Zmazať „' + zak + '" z tohto týždňa?\n\n' +
+    new Set(moje.map(x=>x.worker)).size + ' ľudí · ' + moje.length + ' dní\n\n' +
+    'Zmaže sa len tento týždeň. Samotná zákazka a staršie týždne ostanú.',
+    'Zmazať', 'Zrušiť');
+  if(!ok) return;
+  const kolko = odstranZmeny(moje);
+  await saveShifts();
+  renderRozpis(); renderCalendar();
+  showToast('„' + zak + '" zmazaná z týždňa — ' + kolko + ' dní', { ms: 5000 });
 }
 
 // Deň otvorený z Rozpisu: keď je prázdny, rovno mu predvyplň zákazku, z ktorej sa klikalo -
@@ -6753,6 +7849,7 @@ function otvorDenZRozpisu(datum, clovek, zakazka){
 // niečím iným, sa zámerne nechajú tak - prepisovať cudzí zápis bez opýtania je strata práce.
 async function pridajClovekaNaZakazku(zak, mon, daysInWeek){
   const uz = new Set(shifts.filter(x=> daysInWeek.includes(x.date) && (x.zakazka||'').trim() === zak).map(x=>x.worker));
+  if(!zakazkyLoaded) await loadZakazky();
   const volny = (workers||[]).map(w=>w.name).filter(n=> !uz.has(n)).sort((a,b)=>a.localeCompare(b,'sk'));
   if(!volny.length){ showToast('Na tejto zákazke sú už všetci z tímu'); return; }
 
@@ -9691,6 +10788,19 @@ function openRozpisReview(){
   const wrap = $('rozpisReviewList');
   wrap.innerHTML = '';
 
+  const neznameZakazky = parsedRozpisGroups
+    .filter(g=> typZoSkupiny(g.zakazka) === 'praca' && !zakazkaPodlaNazvu(g.zakazka))
+    .map(g=> (g.zakazka||'').trim());
+  if(neznameZakazky.length){
+    const box = document.createElement('div');
+    box.className = 'tim-nezaradeni';
+    box.innerHTML = '🏗️ Tieto stavby ešte nemajú založenú zákazku (' + neznameZakazky.length + '): <b>' +
+      neznameZakazky.map(escapeHtml).join(', ') + '</b><br>' +
+      'Zapíšu sa aj tak, ale nebudú mať kontakt ani odberateľa. Založ ich v Zákazkách, ' +
+      'nech sa nabudúce spárujú samy.';
+    wrap.appendChild(box);
+  }
+
   const nezname = [];
   parsedRozpisGroups.forEach(g=> g.workers.forEach(w=>{
     const vTime = menoZTimu(w);
@@ -9712,7 +10822,12 @@ function openRozpisReview(){
     card.style.flexDirection = 'column';
     card.style.alignItems = 'stretch';
     card.innerHTML = `
-      <div class="mr-title">${escapeHtml(g.zakazka)}${g.auto ? ' · 🚐 '+escapeHtml(g.auto) : ''}</div>
+      <div class="mr-title">${escapeHtml(nazovSkupiny(g))}${
+        zakazkaPodlaNazvu(g.zakazka) ? '' : ' <span style="color:var(--warn); font-size:11px;">⚠ bez zákazky</span>'
+      }${g.auto ? ' · 🚐 '+escapeHtml(g.auto) : ''}</div>
+      ${nazovSkupiny(g) !== (g.zakazka||'').trim()
+        ? '<div class="mr-meta" style="color:var(--steel-dk);">v texte „' + escapeHtml(g.zakazka) + '" → zapíše sa ako „' + escapeHtml(nazovSkupiny(g)) + '"</div>'
+        : ''}
       <div class="mr-meta" style="color:var(--steel-dk); font-weight:700;">${escapeHtml(dniSkupiny(g).join(' · '))}</div>
       <div class="mr-meta">${g.workers.map(w=>menoDoKontroly(w)).join(', ')}</div>
       ${g.poznamka ? `<div class="mr-meta" style="font-style:italic; margin-top:4px;">${escapeHtml(g.poznamka)}</div>` : ''}
@@ -9733,6 +10848,13 @@ function openRozpisReview2(){
 }
 $('rozpisReviewCancel').onclick = ()=> $('rozpisReviewOverlay').classList.remove('show');
 $('rozpisReviewOverlay').addEventListener('click', e=>{ if(e.target.id==='rozpisReviewOverlay') $('rozpisReviewOverlay').classList.remove('show'); });
+
+// Názov, pod ktorým sa skupina naozaj zapíše. Keď zákazka existuje, použije sa jej
+// názov (aj keď bol v texte napísaný inak) - to je celý zmysel zoznamu zákaziek.
+function nazovSkupiny(g){
+  const z = zakazkaPodlaNazvu(g.zakazka);
+  return z ? z.nazov : (g.zakazka || '').trim();
+}
 
 // Ktoré dni dostane konkrétna skupina: buď to, čo bolo napísané pri nej v texte,
 // alebo dni zvolené pre celý import.
@@ -9768,6 +10890,7 @@ $('rozpisReviewConfirm').onclick = async ()=>{
     if(g.poznamka) poznamkaParts.push(g.poznamka);
     const poznamka = poznamkaParts.join(' | ');
     const typ = typZoSkupiny(g.zakazka);
+    const nazovZak = nazovSkupiny(g);
     dniSkupiny(g).forEach(sk=>{
       const i = SKRATKY_DNI.indexOf(sk);
       if(i < 0) return;
@@ -9780,7 +10903,7 @@ $('rozpisReviewConfirm').onclick = async ()=>{
           ds, worker,
           data: {
             typ,
-            zakazka: typ === 'praca' ? g.zakazka : '',
+            zakazka: typ === 'praca' ? nazovZak : '',
             from: typ === 'praca' ? cas.from : '',
             to:   typ === 'praca' ? cas.to   : '',
             poznamka
@@ -9811,6 +10934,21 @@ $('rozpisReviewConfirm').onclick = async ()=>{
   });
 
   await saveShifts();
+
+  // Auto patrí k zákazke, nielen do poznámky pri človeku. Bez toho appka nevie
+  // zistiť, že jedno auto je pridelené na dve stavby naraz, a kontrola rozpisu
+  // hlási "bez prideleného auta", hoci v texte auto bolo.
+  await loadRozpisAuto();
+  const wk = weekKey(mon);
+  let zmenaAut = false;
+  parsedRozpisGroups.forEach(g=>{
+    const auto = String(g.auto || '').trim();
+    if(!auto || typZoSkupiny(g.zakazka) !== 'praca') return;
+    rozpisAuto[wk + '|' + nazovSkupiny(g)] = auto;
+    zmenaAut = true;
+  });
+  if(zmenaAut) await saveRozpisAuto();
+
   $('rozpisReviewOverlay').classList.remove('show');
   // Rozpis nech hneď ukazuje ten týždeň, do ktorého sa zapisovalo - inak to vyzerá,
   // že sa nič nestalo (presne toto Matúša pomýlilo).
@@ -10804,7 +11942,9 @@ $('clearTestDataBtn').onclick = async ()=>{
     if(master){
       master.addEventListener('click', (e)=>{
         if(!JE_TELEFON()) return;
-        if(!e.target.closest('.md-item, .proj-card, .worker-row, .car-card')) return;
+        // Položka zoznamu aj tlačidlo "pridať nové" - oboje ústi do detailu.
+        if(!e.target.closest('.md-item, .proj-card, .worker-row, .car-card, .zakazka-karta, .md-master-actions button')) return;
+        if(e.target.closest('.zk-tel')) return;      // telefón volá, neotvára detail
         split.classList.add('detail-otvoreny');
       });
     }
@@ -10832,6 +11972,7 @@ $('clearTestDataBtn').onclick = async ()=>{
 
   const TAB_META = {
     home:      ['⌂',  'Plocha',              'Prehľad všetkých sekcií appky'],
+    zakazky:   ['🏗️', 'Zákazky',             'Stavby, odberatelia a kontakty'],
     kalendar:  ['📅', 'Kalendár',            'Mesačný rozpis zmien podľa človeka'],
     rozpis:    ['📋', 'Rozpis',              'Týždenný rozpis podľa zákazky a mesta'],
     zameranie: ['📐', 'Zameranie',           'Projekty → trasy → položky izolácie'],
@@ -10980,6 +12121,32 @@ $('clearTestDataBtn').onclick = async ()=>{
       r.classList.toggle('pc-active', !!n && n.textContent === name);
     });
   }
+
+  /* ================= ZÁKAZKY (master → detail) ================= */
+  const zakTab = byId('tab-zakazky');
+  const zakSplit = makeSplit(zakTab, true);
+  zakSplit.master.appendChild(masterTitle('Zákazky'));
+  zakSplit.master.appendChild(byId('zakFilter'));
+  const zakAct = div('md-master-actions');
+  zakAct.appendChild(byId('newZakazkaBtn'));
+  zakAct.appendChild(byId('zakazkyZRozpisuBtn'));
+  zakSplit.master.appendChild(zakAct);
+  zakSplit.master.appendChild(byId('zakazkaList'));
+  zakSplit.master.appendChild(byId('zakazkaEmpty'));
+  const zakOv = byId('zakKartaOverlay');
+  zakSplit.detail.appendChild(div('pc-inline-title', 'Detail zákazky'));
+  zakSplit.detail.appendChild(zakOv);
+  const zakPh = placeholder('🏗️', 'Klikni na zákazku v zozname vľavo, alebo založ novú.');
+  zakSplit.detail.appendChild(zakPh);
+  inlineDetail(zakOv, zakPh);
+  keepOnly(zakTab, [zakSplit.split]);
+
+  // Zvýraznenie vybranej zákazky v zozname - inak sa na PC nedá zistiť, čo je otvorené.
+  byId('zakazkaList').addEventListener('click', (e)=>{
+    const karta = e.target.closest('.zakazka-karta');
+    if(!karta || e.target.closest('.zk-tel')) return;
+    D.querySelectorAll('#zakazkaList .zakazka-karta').forEach(c=> c.classList.toggle('pc-active', c === karta));
+  });
 
   /* ================= AUTÁ (master → detail) ================= */
   const at = byId('tab-auta');
