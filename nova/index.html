@@ -316,7 +316,9 @@
     font-weight:600; display:none;
   }
   .paint-hint.show{ display:block; }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  /* minmax(0,1fr), nie 1fr: inak si dlhý názov zákazky vypýta širší stĺpec,
+     prázdne dni sa stlačia a hlavička PO–NE prestane sedieť nad dňami. */
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
   #calDow{ margin-bottom:6px; }
   .cal-dow{ text-align:center; font-size:11px; font-weight:700; color:#6d7ea6; padding:4px 0; letter-spacing:.6px; }
   .cal-day{
@@ -484,6 +486,16 @@
     background:rgba(255,255,255,.04); color:#4a5878;
   }
   .zc-dni span.je{ background:var(--steel); color:#04220f; }
+  /* Deň aj meno sú v Rozpise ovládacie prvky, nie popisky. */
+  .zc-dni span{ cursor:pointer; transition:outline-color .12s; outline:1px solid transparent; }
+  .zc-dni span:hover{ outline-color:var(--steel); }
+  .zak-clovek .zc-meno{ cursor:pointer; }
+  .zak-clovek .zc-meno:hover{ color:var(--steel-dk); text-decoration:underline; }
+  .zak-pridaj{
+    margin-top:9px; width:100%; background:rgba(0,212,255,.07); border:1px dashed var(--line-2);
+    color:var(--steel); border-radius:9px; padding:9px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .zak-pridaj:hover{ background:rgba(0,212,255,.15); color:var(--steel-dk); }
   .rozpis-nastroje{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
   .rozpis-nastroje button{
     background:var(--card); border:1px solid var(--line); color:var(--steel);
@@ -584,6 +596,15 @@
   .tim-bunka.volno{ background:rgba(255,255,255,.02); }
   .tim-bunka.vikend{ background:rgba(255,255,255,.015); }
   /* Denný zoznam - náhrada mriežky na telefóne. Na PC je skrytý (mriežka je tam čitateľná). */
+  /* Výber dní pri importe rozpisu */
+  .dni-volba{ display:flex; gap:5px; flex-wrap:wrap; }
+  .dni-volba button{
+    flex:1 1 0; min-width:40px; background:var(--card); border:1px solid var(--line);
+    color:var(--muted); border-radius:9px; padding:9px 4px; cursor:pointer;
+    font-size:12px; font-weight:700;
+  }
+  .dni-volba button.active{ background:var(--steel); border-color:var(--steel); color:#04220f; }
+
   .tim-dni{ display:none; }
   .len-mobil{ display:none; }
   /* Sedem dní sa musí zmestiť aj na najužší telefón - preto malé rozostupy. */
@@ -909,6 +930,20 @@
   .fd-site b{ color:var(--steel-dk); }
   .fd-site div{ color:var(--muted); margin-top:3px; }
 
+  /* Na prehľade je klikateľné takmer všetko - nech je to vidieť aj bez skúšania. */
+  .kpi-card.klik, .fd-bar-row.klik, .fd-alert.klik, .fd-site.klik, .fd-empty.klik{
+    cursor:pointer; transition:background .15s, border-color .15s, transform .1s;
+  }
+  .kpi-card.klik:hover, .fd-alert.klik:hover, .fd-site.klik:hover{
+    border-color:var(--steel); background:rgba(0,212,255,.09);
+  }
+  .fd-bar-row.klik:hover .b-name, .fd-empty.klik:hover{ color:var(--steel-dk); }
+  .kpi-card.klik:active, .fd-alert.klik:active, .fd-site.klik:active{ transform:scale(.985); }
+  .kpi-card.klik:focus-visible, .fd-bar-row.klik:focus-visible,
+  .fd-alert.klik:focus-visible, .fd-site.klik:focus-visible{
+    outline:2px solid var(--steel); outline-offset:2px;
+  }
+
   #fdTip{
     position:fixed; z-index:1400; pointer-events:none; opacity:0; transition:opacity .12s;
     background:#0a1020; border:1px solid var(--line-2); border-radius:8px;
@@ -1054,19 +1089,40 @@
     }
     .sidebar-icon.active{ border-left:none; border-bottom-color:var(--steel); background:transparent; }
 
-    /* Hlavička: jeden riadok, popis sekcie na telefóne zaberá zbytočne */
-    header{ padding:9px 12px; gap:10px; }
+    /* (1) iOS priblíži stránku pri klepnutí do políčka s písmom pod 16 px a späť
+       ju neoddiali. Preto majú políčka na telefóne presne 16 px - je to jediné,
+       čo tomu zabráni (vypnúť približovanie sa nesmie, ľudia si potrebujú zväčšiť). */
+    input, select, textarea{ font-size:16px !important; }
+
+    /* Hlavička: jeden riadok, popis sekcie na telefóne zaberá zbytočne.
+       V režime appky na ploche nie je nad stránkou nič, takže si odsadenie pod
+       hodiny a Dynamic Island musí spraviť sama. */
+    header{
+      padding:calc(9px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+              9px calc(12px + env(safe-area-inset-left));
+      gap:10px;
+    }
     #pcTabTitle{ font-size:16px; }
     #pcTabTitle small{ display:none; }
     header .who .name{ font-size:12.5px; }
     header .who .role{ font-size:10.5px; }
     header .logout{ padding:7px 11px; font-size:11.5px; }
 
-    /* Obsah nech využije celú šírku */
-    .tab.active{ padding:12px 10px 24px; }
+    /* Obsah nech využije celú šírku (naležato mu výrez uberie z boku). */
+    .tab.active{
+      padding:12px calc(10px + env(safe-area-inset-right)) 24px calc(10px + env(safe-area-inset-left));
+    }
     .pc-panel, .pc-narrow{ padding:10px !important; max-width:none !important; }
     .pc-panel{ border-radius:12px; }
     .md-master{ max-height:none; }
+
+    /* (3) Riadok položky: náhľad + text na prvom riadku, počet a akcie pod nimi.
+       Bez zalomenia si tlačidlá vzali celú šírku a na text ostal jeden znak. */
+    .entry{ flex-wrap:wrap; }
+    .entry-body{ order:2; flex:1 1 calc(100% - 70px); min-width:0; }
+    .entry-thumb{ order:1; }
+    .entry .entry-ks{ order:3; flex:0 0 auto; }
+    .entry .entry-actions{ order:4; flex:1 1 auto; justify-content:flex-end; }
 
     /* Prsty potrebujú väčšie ciele než myš */
     button, .yn-opt, .level-opt, .md-item, .item-btn, select, input, textarea{ min-height:42px; }
@@ -2758,7 +2814,15 @@
     <div class="empty" style="padding:0 0 8px; text-align:left; color:var(--muted); font-size:12.5px;">
       Vlož sem text presne tak, ako ho posielaš (skupiny podľa mesta, mená, autá, poznámky) - appka to rozdelí na jednotlivých ľudí.
     </div>
-    <div class="field"><label>Dátum, na ktorý sa rozpis vzťahuje (pre skupiny bez vlastného termínu)</label><input type="date" id="rozpisImportDate"></div>
+    <div class="field">
+      <label>Týždeň, na ktorý rozpis platí</label>
+      <input type="date" id="rozpisImportDate">
+      <div id="rozpisImportTyzden" style="font-size:12px; color:var(--steel-dk); font-weight:700; margin-top:5px;"></div>
+    </div>
+    <div class="field">
+      <label>Dni, ktoré sa zapíšu (víkend len keď sa naozaj robí)</label>
+      <div id="rozpisImportDni" class="dni-volba"></div>
+    </div>
     <div class="field"><textarea id="rozpisImportText" rows="10" placeholder="Vlož text rozpisu..."></textarea></div>
     <div class="sheet-actions">
       <button class="btn-cancel" id="rozpisImportCancel" style="flex:1;">Zrušiť</button>
@@ -3315,6 +3379,26 @@ const TYPY_DNA = {
   pn:        { nazov:'PN / choroba',    skratka:'PN',         jePraca:false },
   volno:     { nazov:'Náhradné voľno',  skratka:'VOĽNO',      jePraca:false },
 };
+// ---------- Štandardný pracovný čas ----------
+// Takto sa v Izol L&M robí zhruba v 90 % prípadov (podľa Matúša). Je to len
+// predvyplnenie - v konkrétnom dni si to zamestnanec vie prepísať.
+const SKRATKY_DNI = ['Po','Ut','St','Št','Pi','So','Ne'];
+const CAS_SABLONA = {
+  1: { from:'06:00', to:'17:30' },   // pondelok - skorší výjazd na stavbu
+  2: { from:'06:30', to:'17:30' },
+  3: { from:'06:30', to:'17:30' },
+  4: { from:'06:30', to:'17:30' },
+  5: { from:'06:30', to:'11:00' },   // piatok - kratšie, ide sa domov
+  // Víkend nie je štandard. Keď sa doň píše, berie sa bežný dlhý deň a prepíše sa ručne.
+  6: { from:'06:30', to:'17:30' },
+  0: { from:'06:30', to:'17:30' },
+};
+function casPreDatum(ds){
+  // Poludnie zámerne: o polnoci by letný/zimný čas vedel deň posunúť.
+  const d = new Date(ds + 'T12:00:00');
+  return CAS_SABLONA[d.getDay()] || { from:'06:30', to:'17:30' };
+}
+
 function typDna(s){ return (s && s.typ && TYPY_DNA[s.typ]) ? s.typ : 'praca'; }
 function jePracovnyDen(s){ return TYPY_DNA[typDna(s)].jePraca; }
 function popisDna(s){
@@ -3399,10 +3483,15 @@ async function vyplnOznacene(){
       if(!zakazka) return;
     } else zakazka = volba;
 
-    const cas = await customPrompt('Čas (od-do), alebo nechaj tak', od + '-' + doo);
+    // Prázdne = každý deň dostane svoj štandardný čas (pondelok je iný než piatok).
+    const cas = await customPrompt(
+      'Čas (od-do). Nechaj prázdne = štandardný čas podľa dňa\n' +
+      '(Po ' + CAS_SABLONA[1].from + '-' + CAS_SABLONA[1].to + ', Ut-Št ' + CAS_SABLONA[2].from + '-' + CAS_SABLONA[2].to +
+      ', Pi ' + CAS_SABLONA[5].from + '-' + CAS_SABLONA[5].to + ')', '');
     if(cas === null) return;
     const casti = String(cas).split('-');
     if(casti.length === 2){ od = casti[0].trim(); doo = casti[1].trim(); }
+    else { od = ''; doo = ''; }   // prázdne -> šablóna sa doplní pri každom dni zvlášť
   }
 
   let zmenene = 0;
@@ -3410,8 +3499,11 @@ async function vyplnOznacene(){
     const clovek = b.clovek, datum = b.datum;
     if(!canEdit(clovek)) return;
     const existing = findEntry(datum, clovek);
+    const stdCas = casPreDatum(datum);
     const data = { typ, zakazka: typ === 'praca' ? zakazka : '',
-                   from: typ === 'praca' ? od : '', to: typ === 'praca' ? doo : '', poznamka: existing ? existing.poznamka : '' };
+                   from: typ === 'praca' ? (od || stdCas.from) : '',
+                   to:   typ === 'praca' ? (doo || stdCas.to)  : '',
+                   poznamka: existing ? existing.poznamka : '' };
     if(existing) Object.assign(existing, data);
     else shifts.push({ id:'s-'+Date.now()+'-'+Math.random().toString(36).slice(2,6), date:datum, worker:clovek, ...data });
     zmenene++;
@@ -3788,8 +3880,9 @@ function openDaySheetUI(dateStr, existing){
   $('sZakazka').value = existing ? existing.zakazka : '';
   $('sZakazka').oninput = skontrolujNazovZakazky;
   skontrolujNazovZakazky();
-  $('sFrom').value = existing ? existing.from : '07:00';
-  $('sTo').value = existing ? existing.to : '15:00';
+  const stdCas = casPreDatum(dateStr);
+  $('sFrom').value = (existing && existing.from) ? existing.from : stdCas.from;
+  $('sTo').value = (existing && existing.to) ? existing.to : stdCas.to;
   $('sPoznamka').value = existing ? existing.poznamka : '';
   $('shiftDelete').style.display = existing ? 'block' : 'none';
   $('shiftOverlay').classList.add('show');
@@ -3803,6 +3896,8 @@ $('shiftDelete').onclick = async ()=>{
   if(existing){ shifts = shifts.filter(s=>s.id!==existing.id); await saveShifts(); }
   $('shiftOverlay').classList.remove('show');
   renderCalendar();
+  renderRozpis();
+  if(kalendarRezim === 'tim') renderTimKalendar();
   showToast('Deň vymazaný');
 };
 
@@ -3825,6 +3920,7 @@ $('shiftSave').onclick = async ()=>{
 
   $('shiftOverlay').classList.remove('show');
   renderCalendar();
+  renderRozpis();
 };
 
 // ---------- TÍM ----------
@@ -6554,9 +6650,19 @@ function renderRozpis(){
       const hod = zmeny.reduce((a,z)=>a+hodinyZoZmeny(z), 0);
       hodinySpolu += hod;
       const maDen = daysInWeek.map(d=> zmeny.some(z=>z.date===d));
+      const dniHtml = maDen.map((je,i)=>{
+        const zm = zmeny.find(z=> z.date === daysInWeek[i]);
+        const popis = je
+          ? (zm && zm.from && zm.to ? zm.from + '–' + zm.to : 'zapísané')
+          : 'nie je zapísaný';
+        return '<span class="' + (je ? 'je' : '') + '" data-datum="' + daysInWeek[i] +
+               '" data-clovek="' + escapeHtml(meno) + '" data-zakazka="' + escapeHtml(zak) + '"' +
+               ' title="' + escapeHtml(meno + ' · ' + skratkyDni[i] + ' ' + daysInWeek[i] + ' · ' + popis + ' — klikni pre úpravu') + '">' +
+               skratkyDni[i] + '</span>';
+      }).join('');
       return '<div class="zak-clovek">' +
-        '<span class="zc-meno">' + escapeHtml(meno) + '</span>' +
-        '<span class="zc-dni">' + maDen.map((je,i)=>'<span class="' + (je?'je':'') + '">' + skratkyDni[i] + '</span>').join('') + '</span>' +
+        '<span class="zc-meno" data-clovek="' + escapeHtml(meno) + '" title="Otvoriť kalendár: ' + escapeHtml(meno) + '">' + escapeHtml(meno) + '</span>' +
+        '<span class="zc-dni">' + dniHtml + '</span>' +
         '<span class="zc-hod">' + (formatHodin(hod) || '—') + '</span>' +
       '</div>';
     }).join('');
@@ -6568,6 +6674,7 @@ function renderRozpis(){
         <div class="zak-suhrn"><b>${ludiaZak.length}</b> ľudí · <b>${dniSpolu}</b> dní${hodinySpolu ? ' · <b>' + formatHodin(hodinySpolu) + '</b>' : ''}</div>
       </div>
       <div class="zak-workers">${workerNames}</div>
+      ${isBoss() ? '<button type="button" class="zak-pridaj" data-zak="' + escapeHtml(zak) + '">＋ pridať človeka na túto zákazku</button>' : ''}
       <div class="auto-field">
         <label>Auto</label>
         <div class="auto-riadok">
@@ -6600,7 +6707,83 @@ function renderRozpis(){
     }
     wrap.appendChild(card);
   });
+
+  // Rozpis je pracovný nástroj, nie výpis: všetko v ňom sa dá odtiaľto zmeniť.
+  wrap.onclick = async (e)=>{
+    const den = e.target.closest('.zc-dni span[data-datum]');
+    if(den){
+      const clovek = den.dataset.clovek, datum = den.dataset.datum;
+      if(!canEdit(clovek)){ showToast('Môžeš upravovať len svoj kalendár'); return; }
+      otvorDenZRozpisu(datum, clovek, den.dataset.zakazka || '');
+      return;
+    }
+    const meno = e.target.closest('.zc-meno[data-clovek]');
+    if(meno){
+      calWorker = meno.dataset.clovek;
+      const sel = document.getElementById('calWorkerSelect');
+      if(sel){ sel.value = calWorker; sel.dispatchEvent(new Event('change')); }
+      prepniKalendarRezim('jeden');
+      openTab('kalendar');
+      if(typeof otvorDetailNaTelefone === 'function') otvorDetailNaTelefone('kalendar');
+      return;
+    }
+    const pridaj = e.target.closest('.zak-pridaj[data-zak]');
+    if(pridaj) await pridajClovekaNaZakazku(pridaj.dataset.zak, mon, daysInWeek);
+  };
+
   zvyrazniKolizieAut();
+}
+
+// Deň otvorený z Rozpisu: keď je prázdny, rovno mu predvyplň zákazku, z ktorej sa klikalo -
+// inak by to znamenalo písať názov znova ručne.
+function otvorDenZRozpisu(datum, clovek, zakazka){
+  calWorker = clovek;
+  const sel = document.getElementById('calWorkerSelect');
+  if(sel) sel.value = clovek;
+  openDayDate = datum;
+  const existing = findEntry(datum, clovek);
+  openDaySheetUI(datum, existing);
+  if(!existing && zakazka){
+    $('sZakazka').value = zakazka;
+    if(typeof skontrolujNazovZakazky === 'function') skontrolujNazovZakazky();
+  }
+}
+
+// Pridanie človeka na zákazku pre celý zobrazený týždeň. Dni, ktoré už má obsadené
+// niečím iným, sa zámerne nechajú tak - prepisovať cudzí zápis bez opýtania je strata práce.
+async function pridajClovekaNaZakazku(zak, mon, daysInWeek){
+  const uz = new Set(shifts.filter(x=> daysInWeek.includes(x.date) && (x.zakazka||'').trim() === zak).map(x=>x.worker));
+  const volny = (workers||[]).map(w=>w.name).filter(n=> !uz.has(n)).sort((a,b)=>a.localeCompare(b,'sk'));
+  if(!volny.length){ showToast('Na tejto zákazke sú už všetci z tímu'); return; }
+
+  const meno = await customPicker('Koho pridať na „' + zak + '"?', volny.map(n=>{
+    const inde = shifts.find(x=> daysInWeek.includes(x.date) && x.worker === n && (x.zakazka||'').trim() && (x.zakazka||'').trim() !== zak);
+    return { hodnota:n, nazov:n, popis: inde ? 'tento týždeň má: ' + inde.zakazka : 'tento týždeň bez zaradenia' };
+  }));
+  if(!meno) return;
+  if(!canEdit(meno)){ showToast('Môžeš upravovať len svoj kalendár'); return; }
+
+  // Bežný pracovný týždeň Po–Pi; víkend sa dopĺňa klikom na konkrétny deň.
+  const prace = daysInWeek.slice(0, 5);
+  const volne = prace.filter(d=> !findEntry(d, meno));
+  const obsadene = prace.length - volne.length;
+  if(!volne.length){ showToast(meno + ' má už celý pracovný týždeň obsadený — uprav dni klikom'); return; }
+
+  const ok = await customConfirm(
+    'Pridať ' + meno + ' na „' + zak + '" (' + volne.length + ' dní)?' +
+    (obsadene ? '\n\n' + obsadene + ' dní už má zapísaných — tie sa nechajú tak.' : ''),
+    'Pridať', 'Zrušiť');
+  if(!ok) return;
+
+  volne.forEach(ds=>{
+    const cas = casPreDatum(ds);
+    shifts.push({ id:'s-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      date:ds, worker:meno, typ:'praca', zakazka:zak, from:cas.from, to:cas.to, poznamka:'' });
+  });
+  await saveShifts();
+  renderRozpis();
+  renderCalendar();
+  showToast(meno + ' pridaný na ' + volne.length + ' dní', { ms: 5000 });
 }
 
 $('prevWeek').onclick = ()=>{ weekAnchor.setDate(weekAnchor.getDate()-7); renderRozpis(); };
@@ -7505,10 +7688,28 @@ async function openFirmaTab(){
   renderFirmaKpis();
 }
 
-function addKpi(wrap, num, label, warn){
+// Prejde na záložku a prípadne rovno otvorí konkrétny záznam. Otvorenie záznamu musí
+// počkať, kým sa záložka vykreslí - preto krátky odklad, nie priame volanie.
+function fdOtvor(tab, potom){
+  openTab(tab);
+  if(typeof potom !== 'function') return;
+  setTimeout(()=>{
+    potom();
+    // Na telefóne je detail samostatná obrazovka - bez tohto by ostal vidieť zoznam.
+    if(typeof otvorDetailNaTelefone === 'function') otvorDetailNaTelefone(tab);
+  }, 220);
+}
+
+function addKpi(wrap, num, label, warn, tab){
   const card = document.createElement('div');
-  card.className = 'kpi-card' + (warn ? ' warn' : '');
+  card.className = 'kpi-card' + (warn ? ' warn' : '') + (tab ? ' klik' : '');
   card.innerHTML = `<div class="kpi-num">${num}</div><div class="kpi-label">${escapeHtml(label)}</div>`;
+  if(tab){
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.onclick = ()=> fdOtvor(tab);
+    card.onkeydown = (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fdOtvor(tab); } };
+  }
   wrap.appendChild(card);
 }
 
@@ -7561,6 +7762,13 @@ function fdBars(wrapEl, rows, opts){
       '<div class="fd-bar-track"><div class="fd-bar-fill'+(r.tone ? ' '+r.tone : '')+'" style="width:'+pct+'%"></div></div>' +
       '<div class="b-val">'+escapeHtml(r.label != null ? String(r.label) : String(r.value))+'</div>';
     if(r.tip) row.dataset.tip = r.tip;
+    if(typeof r.klik === 'function'){
+      row.classList.add('klik');
+      row.setAttribute('role', 'button');
+      row.tabIndex = 0;
+      row.onclick = r.klik;
+      row.onkeydown = (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); r.klik(); } };
+    }
     box.appendChild(row);
   });
   wrapEl.appendChild(box);
@@ -7640,12 +7848,12 @@ function renderFirmaKpis(){
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
   const vydajovTentoMesiac = skladVydaj.filter(i=> (i.ts||0) >= monthStart.getTime()).length;
 
-  addKpi(wrap, zakazkyTyzden.size, 'Zákaziek tento týždeň');
-  addKpi(wrap, workers.length, 'Ľudí v tíme');
-  addKpi(wrap, cars.length, 'Áut vo firme');
-  addKpi(wrap, projects.length, 'Projektov v zameraní');
-  addKpi(wrap, allKeys.length, 'Druhov materiálu na sklade');
-  addKpi(wrap, vydajovTentoMesiac, 'Výdajov zo skladu tento mesiac');
+  addKpi(wrap, zakazkyTyzden.size, 'Zákaziek tento týždeň', false, 'rozpis');
+  addKpi(wrap, workers.length, 'Ľudí v tíme', false, 'tim');
+  addKpi(wrap, cars.length, 'Áut vo firme', false, 'auta');
+  addKpi(wrap, projects.length, 'Projektov v zameraní', false, 'zameranie');
+  addKpi(wrap, allKeys.length, 'Druhov materiálu na sklade', false, 'sklad');
+  addKpi(wrap, vydajovTentoMesiac, 'Výdajov zo skladu tento mesiac', false, 'sklad');
 
   // ---------- prstencové ukazovatele ----------
   const meters = $('fdMeters');
@@ -7697,7 +7905,8 @@ function renderFirmaKpis(){
     (perZak[z] = perZak[z] || new Set()).add(s.worker);
   });
   const zakRows = Object.keys(perZak)
-    .map(z=>({ name:z, value:perZak[z].size, tip: z + ' — ' + [...perZak[z]].join(', ') }))
+    .map(z=>({ name:z, value:perZak[z].size, tip: z + ' — ' + [...perZak[z]].join(', ') + ' (klikni pre Rozpis)',
+               klik: ()=>{ weekAnchor = new Date(); fdOtvor('rozpis', renderRozpis); } }))
     .sort((a,b)=> b.value - a.value);
   fdBars($('fdZakazky'), zakRows, { empty:'Tento týždeň nie je v rozpise žiadna zákazka.' });
 
@@ -7728,18 +7937,20 @@ function renderFirmaKpis(){
   // ---------- čo treba riešiť ----------
   const alerts = [];
   workers.forEach(w=>{
+    const naKartu = ()=> fdOtvor('tim', ()=> openCard(w.name));
     const p = (w.bozp||{}).platnostDo;
-    if(!p){ alerts.push({ d: -9999, ic:'🦺', txt:w.name, sub:'BOZP školenie nie je vyplnené', when:'chýba', tone:'bad' }); return; }
+    if(!p){ alerts.push({ d: -9999, ic:'🦺', txt:w.name, sub:'BOZP školenie nie je vyplnené', when:'chýba', tone:'bad', klik:naKartu }); return; }
     const dLeft = daysUntil(p);
-    if(dLeft < 0) alerts.push({ d:dLeft, ic:'🦺', txt:w.name, sub:'BOZP školenie', when:'pred ' + Math.abs(dLeft) + ' dňami', tone:'bad' });
-    else if(dLeft < 45) alerts.push({ d:dLeft, ic:'🦺', txt:w.name, sub:'BOZP školenie', when:'o ' + dLeft + ' dní', tone:'warn' });
+    if(dLeft < 0) alerts.push({ d:dLeft, ic:'🦺', txt:w.name, sub:'BOZP školenie', when:'pred ' + Math.abs(dLeft) + ' dňami', tone:'bad', klik:naKartu });
+    else if(dLeft < 45) alerts.push({ d:dLeft, ic:'🦺', txt:w.name, sub:'BOZP školenie', when:'o ' + dLeft + ' dní', tone:'warn', klik:naKartu });
   });
   cars.forEach(c=>{
+    const naAuto = ()=> fdOtvor('auta', ()=> openCarSheet(c.id));
     [['stk','STK'],['poistka','Poistka']].forEach(([pole, nazov])=>{
-      if(!c[pole]){ alerts.push({ d:-9999, ic:'🚐', txt:(c.spz||'auto'), sub:nazov + ' nie je vyplnená', when:'chýba', tone:'bad' }); return; }
+      if(!c[pole]){ alerts.push({ d:-9999, ic:'🚐', txt:(c.spz||'auto'), sub:nazov + ' nie je vyplnená', when:'chýba', tone:'bad', klik:naAuto }); return; }
       const dLeft = daysUntil(c[pole]);
-      if(dLeft < 0) alerts.push({ d:dLeft, ic:'🚐', txt:(c.spz||'auto') + ' · ' + (c.popis||''), sub:nazov, when:'pred ' + Math.abs(dLeft) + ' dňami', tone:'bad' });
-      else if(dLeft < 45) alerts.push({ d:dLeft, ic:'🚐', txt:(c.spz||'auto') + ' · ' + (c.popis||''), sub:nazov, when:'o ' + dLeft + ' dní', tone:'warn' });
+      if(dLeft < 0) alerts.push({ d:dLeft, ic:'🚐', txt:(c.spz||'auto') + ' · ' + (c.popis||''), sub:nazov, when:'pred ' + Math.abs(dLeft) + ' dňami', tone:'bad', klik:naAuto });
+      else if(dLeft < 45) alerts.push({ d:dLeft, ic:'🚐', txt:(c.spz||'auto') + ' · ' + (c.popis||''), sub:nazov, when:'o ' + dLeft + ' dní', tone:'warn', klik:naAuto });
     });
   });
   alerts.sort((a,b)=> a.d - b.d);
@@ -7750,16 +7961,23 @@ function renderFirmaKpis(){
   } else {
     alerts.slice(0, 8).forEach(a=>{
       const el = document.createElement('div');
-      el.className = 'fd-alert ' + a.tone;
+      el.className = 'fd-alert ' + a.tone + (a.klik ? ' klik' : '');
       el.innerHTML = '<span class="a-ic">' + a.ic + '</span>' +
         '<span class="a-txt">' + escapeHtml(a.txt) + '<small>' + escapeHtml(a.sub) + '</small></span>' +
         '<span class="a-when">' + escapeHtml(a.when) + '</span>';
+      if(a.klik){
+        el.setAttribute('role', 'button');
+        el.tabIndex = 0;
+        el.onclick = a.klik;
+        el.onkeydown = (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); a.klik(); } };
+      }
       alertWrap.appendChild(el);
     });
     if(alerts.length > 8){
       const more = document.createElement('div');
-      more.className = 'fd-empty';
-      more.textContent = '… a ďalších ' + (alerts.length - 8);
+      more.className = 'fd-empty klik';
+      more.textContent = '… a ďalších ' + (alerts.length - 8) + ' — otvoriť Tím';
+      more.onclick = ()=> fdOtvor('tim');
       alertWrap.appendChild(more);
     }
   }
@@ -7781,7 +7999,8 @@ function renderFirmaKpis(){
     return {
       name: matLabel(sample), value: pct, label: zostatok + j,
       tone: pct <= 15 ? 'bad' : pct <= 40 ? 'warn' : 'ok',
-      tip: matLabel(sample) + ' — naskladnené ' + prijate + j + ', odobraté ' + vydane + j + ', zostáva ' + zostatok + j + ' (' + pct + '%)',
+      tip: matLabel(sample) + ' — naskladnené ' + prijate + j + ', odobraté ' + vydane + j + ', zostáva ' + zostatok + j + ' (' + pct + '%) — klikni pre Sklad',
+      klik: ()=> fdOtvor('sklad'),
     };
   }).sort((a,b)=> a.value - b.value).slice(0, 6);
   fdBars($('fdSklad'), skladRows, { max:100, empty:'Sklad je zatiaľ prázdny.' });
@@ -7800,9 +8019,12 @@ function renderFirmaKpis(){
       const list = perSite[z];
       const cas = list[0].from && list[0].to ? (list[0].from + '–' + list[0].to) : '';
       const el = document.createElement('div');
-      el.className = 'fd-site';
+      el.className = 'fd-site klik';
       el.innerHTML = '<b>' + escapeHtml(z) + '</b>' + (cas ? ' <span style="color:#6d7ea6">' + cas + '</span>' : '') +
         '<div>' + escapeHtml(list.map(s=>s.worker).join(', ')) + '</div>';
+      el.setAttribute('role', 'button');
+      el.tabIndex = 0;
+      el.onclick = ()=>{ weekAnchor = new Date(); fdOtvor('rozpis', renderRozpis); };
       dnesWrap.appendChild(el);
     });
   }
@@ -9362,10 +9584,51 @@ $('sketchReviewConfirm').onclick = async ()=>{
 // ---------- RÝCHLY IMPORT ROZPISU (text z WhatsAppu -> AI rozparsuje na skupiny -> kalendár) ----------
 let parsedRozpisGroups = [];
 
+// Ktoré dni sa pri importe zapíšu. Po–Pi je bežný týždeň, víkend sa zapína ručne.
+let importDni = ['Po','Ut','St','Št','Pi'];
+
+function vykresliImportDni(){
+  const obal = $('rozpisImportDni');
+  if(!obal) return;
+  obal.innerHTML = SKRATKY_DNI.map(sk=>
+    '<button type="button" class="' + (importDni.includes(sk) ? 'active' : '') + '" data-den="' + sk + '">' + sk + '</button>').join('');
+  obal.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{
+      const sk = b.dataset.den;
+      importDni = importDni.includes(sk) ? importDni.filter(x=>x!==sk) : importDni.concat([sk]);
+      vykresliImportDni();
+    };
+  });
+}
+
+// Rozpis sa píše dopredu (typicky v nedeľu na ďalší týždeň), tak z vybraného
+// dátumu vždy určíme celý týždeň a napíšeme to natvrdo, nech je to jasné.
+function vykresliImportTyzden(){
+  const pole = $('rozpisImportDate');
+  const popis = $('rozpisImportTyzden');
+  if(!pole || !popis) return;
+  if(!pole.value){ popis.textContent = ''; return; }
+  const mon = mondayOf(new Date(pole.value + 'T12:00:00'));
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const f = (d)=> d.toLocaleDateString('sk-SK', { day:'numeric', month:'numeric' });
+  popis.textContent = 'Zapíše sa do týždňa ' + f(mon) + ' – ' + f(sun) + ' ' + sun.getFullYear();
+}
+
 $('rozpisImportBtn').onclick = ()=>{
   $('rozpisImportText').value = '';
+  importDni = ['Po','Ut','St','Št','Pi'];
+  vykresliImportDni();
   const today = new Date();
-  $('rozpisImportDate').value = isoDate(today);
+  // Predvolene ten týždeň, ktorý je otvorený v Rozpise. Keď je to práve prebiehajúci
+  // týždeň a je víkend, rozpis sa píše na ten nasledujúci - tak ho ponúkni rovno.
+  const ponuka = mondayOf(weekAnchor);
+  const denVTyzdni = new Date().getDay();
+  if(fmtDate(ponuka) === fmtDate(mondayOf(new Date())) && (denVTyzdni === 0 || denVTyzdni === 6)){
+    ponuka.setDate(ponuka.getDate() + 7);
+  }
+  $('rozpisImportDate').value = isoDate(ponuka);
+  vykresliImportTyzden();
+  $('rozpisImportDate').onchange = vykresliImportTyzden;
   $('rozpisImportOverlay').classList.add('show');
 };
 $('rozpisImportCancel').onclick = ()=> $('rozpisImportOverlay').classList.remove('show');
@@ -9379,7 +9642,8 @@ $('rozpisImportProcess').onclick = async ()=>{
   try{
     const systemPrompt = `Si asistent, ktorý prepisuje týždenný pracovný rozpis (posiela sa cez WhatsApp) na štruktúrované skupiny.
 Text obsahuje skupiny podľa mesta/zákazky, v každej zoznam mien ľudí, prípadne auto a poznámky (čo zobrať, termín, upozornenia).
-Pre KAŽDÚ skupinu vráť jeden objekt: {"zakazka": "názov mesta/zákazky", "workers": ["meno1","meno2",...], "auto": "názov auta ak je uvedené, inak prázdne", "poznamka": "všetky poznámky/termíny/veci na zobratie pre túto skupinu spojené do jedného krátkeho textu, inak prázdne"}.
+Pre KAŽDÚ skupinu vráť jeden objekt: {"zakazka": "názov mesta/zákazky", "workers": ["meno1","meno2",...], "auto": "názov auta ak je uvedené, inak prázdne", "poznamka": "všetky poznámky/termíny/veci na zobratie pre túto skupinu spojené do jedného krátkeho textu, inak prázdne", "dni": []}.
+Rozpis platí na celý pracovný týždeň. Do "dni" daj skratky ["Po","Ut","St","Št","Pi","So","Ne"] IBA vtedy, keď je pri skupine výslovne uvedené, ktoré dni platí (napr. "len Po-St", "aj v sobotu", "iba piatok"). Ak dni uvedené nie sú, vráť prázdne pole - doplní sa bežný pracovný týždeň.
 Mená píš presne tak, ako sú v texte (aj s diakritikou). Skupinu "DOVOLENKA" tiež zahrň (bez auta, poznámka "dovolenka"). Značky ako "✅", "⸻", "*" a odrážky ignoruj, nie sú súčasťou mena ani zákazky.
 Odpovedz IBA JSON poľom objektov, žiadny iný text, žiadne markdown bločky.`;
 
@@ -9410,10 +9674,38 @@ Odpovedz IBA JSON poľom objektov, žiadny iný text, žiadne markdown bločky.`
   btn.textContent = 'Spracovať'; btn.disabled = false;
 };
 
+// Meno do zoznamu v kontrole. Keď človek v tíme nie je, je to takmer vždy preklep -
+// zmena by sa zapísala "do prázdna" a nikde by sa neukázala, tak to treba vidieť hneď.
+function menoDoKontroly(meno){
+  const vTime = menoZTimu(meno);
+  if((workers||[]).some(w=> w.name === vTime)) return escapeHtml(vTime);
+  const najblizsi = (workers||[]).map(w=>({ meno:w.name, d: vzdialenostMien(meno, w.name) }))
+    .sort((a,b)=>a.d-b.d)[0];
+  const navrh = (najblizsi && najblizsi.d <= 3) ? ' (nemyslel si ' + escapeHtml(najblizsi.meno) + '?)' : '';
+  return '<span style="color:var(--warn); font-weight:700;">⚠ ' + escapeHtml(meno) + '</span>' +
+         '<span style="color:var(--muted);">' + navrh + '</span>';
+}
+
 function openRozpisReview(){
   $('rozpisImportOverlay').classList.remove('show');
   const wrap = $('rozpisReviewList');
   wrap.innerHTML = '';
+
+  const nezname = [];
+  parsedRozpisGroups.forEach(g=> g.workers.forEach(w=>{
+    const vTime = menoZTimu(w);
+    if(!(workers||[]).some(x=> x.name === vTime) && !nezname.includes(w)) nezname.push(w);
+  }));
+  if(nezname.length){
+    const box = document.createElement('div');
+    box.className = 'tim-nezaradeni';
+    box.innerHTML = '⚠️ Tieto mená appka v tíme nepozná (' + nezname.length + '): <b>' +
+      nezname.map(escapeHtml).join(', ') + '</b><br>' +
+      'Zapíšu sa tak, ako sú, ale v Tíme ani vo Výkaze sa neukážu. Oprav ich v texte a spracuj znova, ' +
+      'alebo skupinu nezahrň.';
+    wrap.appendChild(box);
+  }
+
   parsedRozpisGroups.forEach((g, idx)=>{
     const card = document.createElement('div');
     card.className = 'mat-row';
@@ -9421,7 +9713,8 @@ function openRozpisReview(){
     card.style.alignItems = 'stretch';
     card.innerHTML = `
       <div class="mr-title">${escapeHtml(g.zakazka)}${g.auto ? ' · 🚐 '+escapeHtml(g.auto) : ''}</div>
-      <div class="mr-meta">${g.workers.map(escapeHtml).join(', ')}</div>
+      <div class="mr-meta" style="color:var(--steel-dk); font-weight:700;">${escapeHtml(dniSkupiny(g).join(' · '))}</div>
+      <div class="mr-meta">${g.workers.map(w=>menoDoKontroly(w)).join(', ')}</div>
       ${g.poznamka ? `<div class="mr-meta" style="font-style:italic; margin-top:4px;">${escapeHtml(g.poznamka)}</div>` : ''}
     `;
     const delBtn = document.createElement('button');
@@ -9441,29 +9734,90 @@ function openRozpisReview2(){
 $('rozpisReviewCancel').onclick = ()=> $('rozpisReviewOverlay').classList.remove('show');
 $('rozpisReviewOverlay').addEventListener('click', e=>{ if(e.target.id==='rozpisReviewOverlay') $('rozpisReviewOverlay').classList.remove('show'); });
 
+// Ktoré dni dostane konkrétna skupina: buď to, čo bolo napísané pri nej v texte,
+// alebo dni zvolené pre celý import.
+function dniSkupiny(g){
+  const vlastne = Array.isArray(g.dni) ? g.dni.filter(d=> SKRATKY_DNI.includes(d)) : [];
+  return vlastne.length ? vlastne : importDni;
+}
+
+// "DOVOLENKA" nie je zákazka, ale typ dňa - inak by sa počítala ako odpracovaný deň.
+function typZoSkupiny(zakazka){
+  const t = bezDiakritiky(zakazka);
+  if(t.includes('dovolenka')) return 'dovolenka';
+  if(t === 'pn' || t.includes('choroba')) return 'pn';
+  if(t.includes('nahradne volno')) return 'volno';
+  return 'praca';
+}
+
 $('rozpisReviewConfirm').onclick = async ()=>{
-  const targetDate = $('rozpisImportDate').value;
-  if(!targetDate){ showToast('Vyber dátum'); return; }
+  const datum = $('rozpisImportDate').value;
+  if(!datum){ showToast('Vyber týždeň'); return; }
+  if(!importDni.length && !parsedRozpisGroups.some(g=> dniSkupiny(g).length)){
+    showToast('Vyber aspoň jeden deň'); return;
+  }
+  const mon = mondayOf(new Date(datum + 'T12:00:00'));
+
+  // Najprv len spočítaj, čo sa chystá - prepísať už rozpísaný deň je strata práce,
+  // tak nech je vopred vidieť, koľkých dní sa to týka.
   await loadShifts();
-  let count = 0;
+  const zapisy = [];
   parsedRozpisGroups.forEach(g=>{
     const poznamkaParts = [];
-    if(g.auto) poznamkaParts.push('Auto: '+g.auto);
+    if(g.auto) poznamkaParts.push('Auto: ' + g.auto);
     if(g.poznamka) poznamkaParts.push(g.poznamka);
     const poznamka = poznamkaParts.join(' | ');
-    g.workers.forEach(worker=>{
-      const existing = findEntry(targetDate, worker);
-      const data = { zakazka: g.zakazka, from:'', to:'', poznamka };
-      if(existing){ Object.assign(existing, data); }
-      else{ shifts.push({ id:'s-'+Date.now()+'-'+Math.random().toString(36).slice(2,6), date: targetDate, worker, ...data }); }
-      count++;
+    const typ = typZoSkupiny(g.zakazka);
+    dniSkupiny(g).forEach(sk=>{
+      const i = SKRATKY_DNI.indexOf(sk);
+      if(i < 0) return;
+      const d = new Date(mon); d.setDate(mon.getDate() + i);
+      const ds = fmtDate(d);
+      const cas = casPreDatum(ds);
+      g.workers.forEach(meno=>{
+        const worker = menoZTimu(meno);          // "Lubomir" -> "Ľubomír", ak je taký v tíme
+        zapisy.push({
+          ds, worker,
+          data: {
+            typ,
+            zakazka: typ === 'praca' ? g.zakazka : '',
+            from: typ === 'praca' ? cas.from : '',
+            to:   typ === 'praca' ? cas.to   : '',
+            poznamka
+          }
+        });
+      });
     });
   });
+
+  if(!zapisy.length){ showToast('Nie je čo zapísať'); return; }
+  const prepisu = zapisy.filter(z=> findEntry(z.ds, z.worker)).length;
+  const ludi = new Set(zapisy.map(z=>z.worker)).size;
+  const dniPocet = new Set(zapisy.map(z=>z.ds)).size;
+  const f = (d)=> d.toLocaleDateString('sk-SK', { day:'numeric', month:'numeric' });
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+
+  const ok = await customConfirm(
+    'Zapísať rozpis na týždeň ' + f(mon) + ' – ' + f(sun) + '?\n\n' +
+    ludi + ' ľudí · ' + dniPocet + ' dní · ' + zapisy.length + ' záznamov' +
+    (prepisu ? '\n\nPozor: ' + prepisu + ' už rozpísaných dní sa prepíše.' : ''),
+    'Zapísať', 'Zrušiť');
+  if(!ok) return;
+
+  zapisy.forEach(z=>{
+    const existing = findEntry(z.ds, z.worker);
+    if(existing){ Object.assign(existing, z.data); }
+    else{ shifts.push({ id:'s-'+Date.now()+'-'+Math.random().toString(36).slice(2,6), date:z.ds, worker:z.worker, ...z.data }); }
+  });
+
   await saveShifts();
   $('rozpisReviewOverlay').classList.remove('show');
+  // Rozpis nech hneď ukazuje ten týždeň, do ktorého sa zapisovalo - inak to vyzerá,
+  // že sa nič nestalo (presne toto Matúša pomýlilo).
+  weekAnchor = new Date(mon);
   renderCalendar();
   renderRozpis();
-  showToast(`Rozpis uložený pre ${count} ľudí`);
+  showToast('Zapísané: ' + ludi + ' ľudí, ' + zapisy.length + ' dní', { ms: 6000 });
 };
 
 // ---------- Odhad zo Zamerania ----------
@@ -10424,6 +10778,15 @@ $('clearTestDataBtn').onclick = async ()=>{
      Zoznam a detail sa striedajú ako dve obrazovky. Na PC (nad 700 px) sa nič
      z tohto neprejaví - CSS tam obe časti zobrazuje vedľa seba tak ako doteraz. */
   const JE_TELEFON = ()=> window.matchMedia('(max-width:700px)').matches;
+
+  // Keď sa niekam preskočí zvonku (napr. klik na prehľade firmy), na telefóne
+  // treba prepnúť zo zoznamu na detail - inak by človek videl zoznam a nechápal prečo.
+  window.otvorDetailNaTelefone = function(tabId){
+    if(!JE_TELEFON()) return;
+    const t = byId('tab-' + tabId);
+    const sp = t && t.querySelector('.md-split');
+    if(sp) sp.classList.add('detail-otvoreny');
+  };
 
   function pripravSplitPreTelefon(split){
     if(!split || split.dataset.spatPripravene) return;
