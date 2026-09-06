@@ -1,0 +1,19 @@
+{
+  "name": "Izol L&M — Tímová appka",
+  "short_name": "Izol L&M",
+  "description": "Zameranie, materiál, sklad, rozpis a kalendár pre Izol L&M s.r.o.",
+  "lang": "sk",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e27",
+  "theme_color": "#0a0e27",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "ikony/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikony/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "ikony/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
